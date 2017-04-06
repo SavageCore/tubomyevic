@@ -365,6 +365,7 @@ __myevic__ void GetUserInput()
 
 				case 2:
 				case 3:
+					gFlags.autopuff = 1;
 				case 4:
 					switch ( dfClick[FireClickCount-2] )
 					{
