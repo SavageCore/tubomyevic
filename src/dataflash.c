@@ -6,10 +6,11 @@
 #include "events.h"
 #include "battery.h"
 #include "atomizer.h"
+#include "miscs.h"
 
 #include "dataflash.h"
 
-//=============================================================================
+//=========================================================================
 // DataFlash parameters global structure
 
 dfStruct_t DataFlash;
@@ -38,40 +39,89 @@ uint16_t	fmcCntrsIndex;
 	__attribute__((aligned(4))) \
 	__attribute__((section (".productid")))
 
-const char pid_vtcmini	[4]	__PIDATTR__	= { 'E','0','5','2' };
-const char pid_vtwomini	[4]	__PIDATTR__	= { 'E','1','1','5' };
-const char pid_vtwo		[4]	__PIDATTR__	= { 'E','0','4','3' };
-const char pid_vtcdual	[4]	__PIDATTR__	= { 'E','0','7','9' };
-const char pid_presa75w	[4]	__PIDATTR__	= { 'W','0','0','7' };
-const char pid_wrx75tc	[4]	__PIDATTR__	= { 'W','0','2','6' };
-const char pid_evicaio	[4]	__PIDATTR__	= { 'E','0','9','2' };
-const char pid_egripii	[4]	__PIDATTR__	= { 'E','0','8','3' };
-const char pid_cubomini	[4]	__PIDATTR__	= { 'E','0','5','6' };
-const char pid_cuboid	[4]	__PIDATTR__	= { 'E','0','6','0' };
-const char pid_evicbasic[4]	__PIDATTR__	= { 'E','1','5','0' };
-const char pid_rx200s	[4]	__PIDATTR__	= { 'W','0','3','3' };
-const char pid_rx23		[4]	__PIDATTR__	= { 'W','0','1','8' };
-const char pid_presa100w[4]	__PIDATTR__	= { 'W','0','1','7' };
+const char pid_vtcmini	[8]	__PIDATTR__	= { 'E','0','5','2', 1, 1, 1, 0 };
+const char pid_vtwomini	[8]	__PIDATTR__	= { 'E','1','1','5', 1, 0, 1, 0 };
+const char pid_vtwo		[8]	__PIDATTR__	= { 'E','0','4','3', 1, 0, 1, 0 };
+const char pid_evicaio	[8]	__PIDATTR__	= { 'E','0','9','2', 1, 0, 1, 0 };
+const char pid_egripii	[8]	__PIDATTR__	= { 'E','0','8','3', 1, 0, 0, 0 };
+const char pid_cubomini	[8]	__PIDATTR__	= { 'E','0','5','6', 1, 0, 2, 0 };
+const char pid_evicbasic[8]	__PIDATTR__	= { 'E','1','5','0', 1, 0, 1, 0 };
+const char pid_presa75w	[8]	__PIDATTR__	= { 'W','0','0','7', 1, 0, 3, 0 };
+const char pid_presa100w[8]	__PIDATTR__	= { 'W','0','1','7', 1, 0, 0, 0 };
+const char pid_wrx75tc	[8]	__PIDATTR__	= { 'W','0','2','6', 1, 0, 3, 0 };
+const char pid_vtcdual	[8]	__PIDATTR__	= { 'E','0','7','9', 1, 0, 1, 0 };
+const char pid_cuboid	[8]	__PIDATTR__	= { 'E','0','6','0', 1, 0, 2, 0 };
+const char pid_cubo200	[8]	__PIDATTR__	= { 'E','1','6','6', 1, 0, 0, 0 };
+const char pid_rx200s	[8]	__PIDATTR__	= { 'W','0','3','3', 1, 0, 0, 0 };
+const char pid_rx23		[8]	__PIDATTR__	= { 'W','0','1','8', 1, 0, 2, 0 };
+const char pid_rx300	[8]	__PIDATTR__	= { 'W','0','6','9', 1, 0, 0, 0 };
+const char pid_rxmini	[8]	__PIDATTR__	= { 'W','0','7','3', 1, 0, 0, 0 };
+const char pid_lpb		[8]	__PIDATTR__	= { 'W','0','4','3', 1, 0, 0, 0 };
 
-#define MAKEPID(p) (((p)[0])|((p)[1]<<8)|((p)[2]<<16)|((p)[3]<<24))
+#define PID_SCRAMBLE 0x12345678UL
+#define MAKEPID(p) ((((p)[0])|((p)[1]<<8)|((p)[2]<<16)|((p)[3]<<24))^PID_SCRAMBLE)
+#define MAKEHWV(p) (((p)[4])|((p)[5]<<8)|((p)[6]<<16)|((p)[7]<<24))
+
+#define HWV2INT(v) (((v)&0xff)*100+(((v)>>8)&0xff)*10+(((v)>>16)&0xff))
 
 #define PID_VTCMINI		MAKEPID(pid_vtcmini)
 #define PID_VTWOMINI	MAKEPID(pid_vtwomini)
 #define PID_VTWO		MAKEPID(pid_vtwo)
-#define PID_VTCDUAL		MAKEPID(pid_vtcdual)
-#define PID_PRESA75W	MAKEPID(pid_presa75w)
-#define PID_WRX75TC		MAKEPID(pid_wrx75tc)
 #define PID_EVICAIO		MAKEPID(pid_evicaio)
 #define PID_EGRIPII		MAKEPID(pid_egripii)
 #define PID_CUBOMINI	MAKEPID(pid_cubomini)
-#define PID_CUBOID		MAKEPID(pid_cuboid)
 #define PID_EVICBASIC	MAKEPID(pid_evicbasic)
+#define PID_PRESA75W	MAKEPID(pid_presa75w)
+#define PID_PRESA100W	MAKEPID(pid_presa100w)
+#define PID_WRX75TC		MAKEPID(pid_wrx75tc)
+#define PID_VTCDUAL		MAKEPID(pid_vtcdual)
+#define PID_CUBOID		MAKEPID(pid_cuboid)
+#define PID_CUBO200		MAKEPID(pid_cubo200)
 #define PID_RX200S		MAKEPID(pid_rx200s)
 #define PID_RX23		MAKEPID(pid_rx23)
-#define PID_PRESA100W	MAKEPID(pid_presa100w)
+#define PID_RX300		MAKEPID(pid_rx300)
+#define PID_RXMINI		MAKEPID(pid_rxmini)
+#define PID_LPB			MAKEPID(pid_lpb)
+
+#define HWV_VTCMINI		MAKEHWV(pid_vtcmini)
+#define HWV_VTWOMINI	MAKEHWV(pid_vtwomini)
+#define HWV_VTWO		MAKEHWV(pid_vtwo)
+#define HWV_EVICAIO		MAKEHWV(pid_evicaio)
+#define HWV_EGRIPII		MAKEHWV(pid_egripii)
+#define HWV_CUBOMINI	MAKEHWV(pid_cubomini)
+#define HWV_EVICBASIC	MAKEHWV(pid_evicbasic)
+#define HWV_PRESA75W	MAKEHWV(pid_presa75w)
+#define HWV_PRESA100W	MAKEHWV(pid_presa100w)
+#define HWV_WRX75TC		MAKEHWV(pid_wrx75tc)
+#define HWV_VTCDUAL		MAKEHWV(pid_vtcdual)
+#define HWV_CUBOID		MAKEHWV(pid_cuboid)
+#define HWV_CUBO200		MAKEHWV(pid_cubo200)
+#define HWV_RX200S		MAKEHWV(pid_rx200s)
+#define HWV_RX23		MAKEHWV(pid_rx23)
+#define HWV_RX300		MAKEHWV(pid_rx300)
+#define HWV_RXMINI		MAKEHWV(pid_rxmini)
+#define HWV_LPB			MAKEHWV(pid_lpb)
 
 
-//=============================================================================
+//=========================================================================
+// Reset device to LDROM
+//-------------------------------------------------------------------------
+__myevic__ void ResetToLDROM()
+{
+	dfBootFlag = 1;
+	UpdateDataFlash();
+
+	SYS_UnlockReg();
+
+	FMC_SELECT_NEXT_BOOT( 1 );
+	SCB->AIRCR = 0x05FA0004;
+
+	while ( 1 )
+		;
+}
+
+
+//=========================================================================
 //----- (00002064) --------------------------------------------------------
 __myevic__ void SetProductID()
 {
@@ -88,10 +138,11 @@ __myevic__ void SetProductID()
 	for ( offset = 0 ; offset < LDROM_SIZE ; offset += 4 )
 	{
 		u32Data = FMC_Read( LDROM_BASE + offset );
+		u32Data ^= PID_SCRAMBLE;
 
 		if ( u32Data == PID_VTCMINI )
 		{
-			dfMaxHWVersion = 0x00010101;
+			dfMaxHWVersion = HWV_VTCMINI;
 			DFMagicNumber = 0x36;
 			BoxModel = BOX_VTCMINI;
 			X32Off = 1;
@@ -99,21 +150,21 @@ __myevic__ void SetProductID()
 		}
 		else if ( u32Data == PID_VTWOMINI )
 		{
-			dfMaxHWVersion = 0x00000001;
+			dfMaxHWVersion = HWV_VTWOMINI;
 			DFMagicNumber = 0x10;
 			BoxModel = BOX_VTWOMINI;
 			break;
 		}
 		else if ( u32Data == PID_VTWO )
 		{
-			dfMaxHWVersion = 0x00010001;
+			dfMaxHWVersion = HWV_VTWO;
 			DFMagicNumber = 0x40;
 			BoxModel = BOX_VTWO;
 			break;
 		}
 		else if ( u32Data == PID_VTCDUAL )
 		{
-			dfMaxHWVersion = 0x00010001;
+			dfMaxHWVersion = HWV_VTCDUAL;
 			DFMagicNumber = 0x12;
 			BoxModel = BOX_VTCDUAL;
 			NumBatteries = 0;
@@ -123,7 +174,7 @@ __myevic__ void SetProductID()
 		}
 		else if ( u32Data == PID_EVICAIO )
 		{
-			dfMaxHWVersion = 0x00010001;
+			dfMaxHWVersion = HWV_EVICAIO;
 			DFMagicNumber = 0x50;
 			BoxModel = BOX_EVICAIO;
 			ScrFlip = 1;
@@ -131,14 +182,14 @@ __myevic__ void SetProductID()
 		}
 		else if ( u32Data == PID_EGRIPII )
 		{
-			dfMaxHWVersion = 0x00000001;
+			dfMaxHWVersion = HWV_EGRIPII;
 			DFMagicNumber = 0x15;
 			BoxModel = BOX_EGRIPII;
 			break;
 		}
 		else if ( u32Data == PID_CUBOMINI )
 		{
-			dfMaxHWVersion = 0x00020001;
+			dfMaxHWVersion = HWV_CUBOMINI;
 			DFMagicNumber = 0x50;
 			BoxModel = BOX_CUBOMINI;
 			ScrFlip = 1;
@@ -147,7 +198,7 @@ __myevic__ void SetProductID()
 		}
 		else if ( u32Data == PID_CUBOID )
 		{
-			dfMaxHWVersion = 0x00020001;
+			dfMaxHWVersion = HWV_CUBOID;
 			DFMagicNumber = 0x39;
 			BoxModel = BOX_CUBOID;
 			NumBatteries = 2;
@@ -157,9 +208,21 @@ __myevic__ void SetProductID()
 			X32Off = 1;
 			break;
 		}
+		else if ( u32Data == PID_CUBO200 )
+		{
+			dfMaxHWVersion = HWV_CUBO200;
+			DFMagicNumber = 0x10;
+			BoxModel = BOX_CUBO200;
+			NumBatteries = 3;
+			MaxBatteries = 3;
+			MaxCurrent = 50;
+			gFlags.pwm_pll = 1;
+			X32Off = 1;
+			break;
+		}
 		else if ( u32Data == PID_EVICBASIC )
 		{
-			dfMaxHWVersion = 0x00010001;
+			dfMaxHWVersion = HWV_EVICBASIC;
 			DFMagicNumber = 0x13;
 			BoxModel = BOX_EVICBASIC;
 			ScrFlip = 1;
@@ -167,7 +230,7 @@ __myevic__ void SetProductID()
 		}
 		else if ( u32Data == PID_PRESA75W )
 		{
-			dfMaxHWVersion = 0x00030001;
+			dfMaxHWVersion = HWV_PRESA75W;
 			DFMagicNumber = 0x30;
 			BoxModel = BOX_PRESA75W;
 			X32Off = 1;
@@ -175,7 +238,7 @@ __myevic__ void SetProductID()
 		}
 		else if ( u32Data == PID_PRESA100W )
 		{
-			dfMaxHWVersion = 0x00000001;
+			dfMaxHWVersion = HWV_PRESA100W;
 			DFMagicNumber = 0x40;
 			BoxModel = BOX_PRESA100W;
 			X32Off = 1;
@@ -183,15 +246,31 @@ __myevic__ void SetProductID()
 		}
 		else if ( u32Data == PID_WRX75TC )
 		{
-			dfMaxHWVersion = 0x00010001;
+			dfMaxHWVersion = HWV_WRX75TC;
 			DFMagicNumber = 0x32;
 			BoxModel = BOX_WRX75TC;
 			X32Off = 1;
 			break;
 		}
+		else if ( u32Data == PID_RXMINI )
+		{
+			dfMaxHWVersion = HWV_RXMINI;
+			DFMagicNumber = 0x10;
+			BoxModel = BOX_RXMINI;
+			X32Off = 1;
+			break;
+		}
+		else if ( u32Data == PID_LPB )
+		{
+			dfMaxHWVersion = HWV_LPB;
+			DFMagicNumber = 0x31;
+			BoxModel = BOX_PRESA75W;	// Act as Presa 75W
+			X32Off = 1;
+			break;
+		}
 		else if ( u32Data == PID_RX200S )
 		{
-			dfMaxHWVersion = 0x00000001;
+			dfMaxHWVersion = HWV_RX200S;
 			DFMagicNumber = 0x14;
 			BoxModel = BOX_RX200S;
 			NumBatteries = 3;
@@ -203,7 +282,7 @@ __myevic__ void SetProductID()
 		}
 		else if ( u32Data == PID_RX23 )
 		{
-			dfMaxHWVersion = 0x00010001;
+			dfMaxHWVersion = HWV_RX23;
 			DFMagicNumber = 0x14;
 			BoxModel = BOX_RX23;
 			NumBatteries = 3;
@@ -213,28 +292,43 @@ __myevic__ void SetProductID()
 			X32Off = 1;
 			break;
 		}
-	}
-
-	if ( offset < LDROM_SIZE )
-	{
-		dfProductID = u32Data;
-	}
-	else
-	{
-		dfBootFlag = 1;
-		UpdateDataFlash();
-		SYS_UnlockReg();
-		SYS_ResetChip();
-		while ( 1 )
-			;
+		else if ( u32Data == PID_RX300 )
+		{
+			dfMaxHWVersion = HWV_RX300;
+			DFMagicNumber = 0x12;
+			BoxModel = BOX_RX300;
+			NumBatteries = 4;
+			MaxBatteries = 4;
+			MaxCurrent = 50;
+			gFlags.pwm_pll = 1;
+			X32Off = 1;
+			break;
+		}
 	}
 
 	FMC_DISABLE_ISP();
 	SYS_LockReg();
+
+	if ( offset < LDROM_SIZE )
+	{
+		dfProductID = u32Data ^ PID_SCRAMBLE;
+
+	//	What's the right behavior in case of bad
+	//	hardware version?
+	//
+	//	if ( HWV2INT(dfMaxHWVersion) < dfHWVersion )
+	//	{
+	//		ResetToLDROM();
+	//	}
+	}
+	else
+	{
+		ResetToLDROM();
+	}
 }
 
 
-//=============================================================================
+//=========================================================================
 //----- (00002080) --------------------------------------------------------
 __myevic__ void FMCReadCounters()
 {
@@ -269,7 +363,7 @@ __myevic__ void FMCReadCounters()
 }
 
 
-//=============================================================================
+//=========================================================================
 //----- (000020CC) --------------------------------------------------------
 __myevic__ void UpdatePTCounters()
 {
@@ -292,25 +386,18 @@ __myevic__ void UpdatePTCounters()
 }
 
 
-//=============================================================================
-//----- (0000388C) --------------------------------------------------------
-__myevic__ void CpyTmpCoefsNI()
+//=========================================================================
+__myevic__ void ResetPowerCurve()
 {
-	for ( int i = 0 ; i <= 20 ; ++i )
-		dfTempCoefsNI[i] = TempCoefsNI[i];
+	for ( int i = 0 ; i < PWR_CURVE_PTS ; ++i )
+	{
+		dfPwrCurve[i].time = 0;
+		dfPwrCurve[i].power = 100;
+	}
 }
 
 
-//=============================================================================
-//----- (000038D8) --------------------------------------------------------
-__myevic__ void CpyTmpCoefsTI()
-{
-	for ( int i = 0 ; i <= 20 ; ++i )
-		dfTempCoefsTI[i] = TempCoefsTI[i];
-}
-
-
-//=============================================================================
+//=========================================================================
 //----- (00001C30) --------------------------------------------------------
 __myevic__ void ResetDataFlash()
 {
@@ -342,8 +429,11 @@ __myevic__ void ResetDataFlash()
 //	dfRezLockedNI = 0;
 	dfTiOn = 1;
 //	dfStealthOn = 0;
-	CpyTmpCoefsNI();
-	CpyTmpCoefsTI();
+	dfTempCoefsNI = 201;
+	ResetCustomBattery();
+	ResetPowerCurve();
+	dfTempCoefsTI = 101;
+	dfLEDColor = 25 << 10;
 //	dfStatus.off = 0;
 //	dfStatus.keylock = 0;
 	dfStatus.flipped = ScrFlip;
@@ -369,7 +459,7 @@ __myevic__ void ResetDataFlash()
 	dfTCRM[0] = 100;
 	dfTCRM[1] = 110;
 	dfTCRM[2] = 120;
-	dfScreenSaver = 1;
+	dfScreenSaver = SSAVER_CLOCK;
 //	dfTCMode = 0;
 //	dfScreenProt = 0;
 //	MemClear( dfSavedCfgRez, sizeof(dfSavedCfgRez) );
@@ -381,13 +471,20 @@ __myevic__ void ResetDataFlash()
 //	dfModesSel = 0;
 	dfClkRatio = RTC_DEF_CLK_RATIO;
 	dfVVRatio = VVEL_DEF_RATIO;
-	dfPreheatPwr = 200;
 //	dfPreheatTime = 0;
 	dfClick[0] = CLICK_ACTION_CLOCK;
 	dfClick[1] = CLICK_ACTION_EDIT;
 //	dfClick[2] = CLICK_ACTION_NONE;
 	dfDimTimeout = 30;
 //	dfBatteryModel = 0;
+	dfPreheatPwr = 200;
+	dfTCAlgo = TCALGO_DEF;
+	dfTCBoost = 50;
+	dfPID.P = PID_P_DEF;
+	dfPID.I = PID_I_DEF;
+	dfPID.D = PID_D_DEF;
+//	dfMillis = 0;
+//	dfProfile = 0;
 	UpdateDataFlash();
 
 	dfPuffCount = 0;
@@ -398,7 +495,7 @@ __myevic__ void ResetDataFlash()
 }
 
 
-//=============================================================================
+//=========================================================================
 
 __myevic__ void DFCheckValuesValidity()
 {
@@ -438,17 +535,17 @@ __myevic__ void DFCheckValuesValidity()
 	if ( dfIsCelsius > 1 )
 	{
 		dfIsCelsius = 1;
-		dfTemp = 180;
+		dfTemp = 200;
 	}
 	else if ( dfIsCelsius )
 	{
-		if ( dfTemp < 150 || dfTemp > 260 )
-			dfTemp = 180;
+		if ( dfTemp < 100 || dfTemp > 315 )
+			dfTemp = 200;
 	}
 	else
 	{
-		if ( dfTemp < 300 || dfTemp > 500 )
-			dfTemp = 355;
+		if ( dfTemp < 200 || dfTemp > 600 )
+			dfTemp = 450;
 	}
 
 	if ( dfRezTI > 150 )
@@ -469,6 +566,37 @@ __myevic__ void DFCheckValuesValidity()
 	if ( dfStealthOn > 1 )
 		dfStealthOn = 0;
 
+	if (( dfTempCoefsNI <= 200 ) || ( dfTempCoefsNI <= 100 ))
+	{
+		dfTempCoefsNI = 201;
+		dfTempCoefsTI = 101;
+
+		ResetCustomBattery();
+		ResetPowerCurve();
+	}
+	else
+	{
+		LoadCustomBattery();
+
+		if ( !CheckCustomBattery() )
+		{
+			ResetCustomBattery();
+		}
+
+		for ( i = 0 ; i < PWR_CURVE_PTS ; ++i )
+		{
+			if (( dfPwrCurve[i].time > 250 || dfPwrCurve[i].power > 200 )
+			||	( i == 0 && dfPwrCurve[i].time != 0 )
+			||	( i != 0 && dfPwrCurve[i].time <= dfPwrCurve[i-1].time ))
+			{
+				ResetPowerCurve();
+				break;
+			}
+		}
+	}
+
+	MemSet( DataFlash.p.Unused4E, 0, sizeof(DataFlash.p.Unused4E) );
+
 	if ( dfShuntRez < SHUNT_MIN_VALUE || dfShuntRez > SHUNT_MAX_VALUE )
 		dfShuntRez = 0;
 
@@ -480,7 +608,7 @@ __myevic__ void DFCheckValuesValidity()
 
 	if ( dfScrMainTime > 5 )
 		dfScrMainTime = 0;
-	
+
 	if ( dfRezTCR > 150 )
 		dfRezTCR = 0;
 
@@ -492,22 +620,6 @@ __myevic__ void DFCheckValuesValidity()
 
 	if ( dfScreenProt > 7 )
 		dfScreenProt = 0;
-
-	for ( i = 0 ; i < 21 ; ++i )
-	{
-		if ( dfTempCoefsNI[i] > 200 )
-			break;
-	}
-	if ( i != 21 )
-		CpyTmpCoefsNI();
-
-	for ( i = 0 ; i < 21 ; ++i )
-	{
-		if ( dfTempCoefsTI[i] > 100 )
-			break;
-	}
-	if ( i != 21 )
-		CpyTmpCoefsTI();
 
 	if ( dfTCRIndex > 2 )
 		dfTCRIndex = 0;
@@ -548,6 +660,9 @@ __myevic__ void DFCheckValuesValidity()
 	if ( dfVVRatio < VVEL_MIN_RATIO || dfVVRatio > VVEL_MAX_RATIO )
 		dfVVRatio = VVEL_DEF_RATIO;
 
+	if ( dfPHDelay > 180 )
+		dfPHDelay = 0;
+
 	v = 0;
 	for ( i = 0 ; i < 3 ; ++i )
 	{
@@ -570,12 +685,8 @@ __myevic__ void DFCheckValuesValidity()
 	if ( dfDimTimeout < 5 || dfDimTimeout > 60 )
 		dfDimTimeout = ScrMainTimes[dfScrMainTime];
 
-	if ( dfBatteryModel >= GetNBatteries() )
+	if (( dfBatteryModel >= GetNBatteries() ) && ( dfBatteryModel != BATTERY_CUSTOM ))
 		dfBatteryModel = 0;
-
-	for ( i = 0 ; i < 3 ; ++i )
-		if ( dfBVOffset[i] < BVO_MIN || dfBVOffset[i] > BVO_MAX )
-			dfBVOffset[i] = 0;
 
 	if ( dfStatus.phpct )
 	{
@@ -588,16 +699,38 @@ __myevic__ void DFCheckValuesValidity()
 			dfPreheatPwr = dfPower;
 	}
 
+	MemSet( DataFlash.p.UnusedCA, 0, sizeof(DataFlash.p.UnusedCA) );
+
 	if ( dfPreheatTime > 200 )
 		dfPreheatTime = 0;
+
+	if ( dfTCAlgo >= TCALGO_MAX )
+		dfTCAlgo = TCALGO_DEF;
+
+	if ( dfTCBoost > 100 )
+		dfTCBoost = 50;
 
 	for ( i = 0 ; i < 3 ; ++i )
 		if ( dfTCRP[i] > 999 )
 			dfTCRP[i] = 0;
+
+	if (( dfPID.P < PID_P_MIN || dfPID.P > PID_P_MAX )
+	||	( dfPID.I > PID_I_MAX )
+	||	( dfPID.D > PID_D_MAX ))
+	{
+		dfPID.P = PID_P_DEF;
+		dfPID.I = PID_I_DEF;
+		dfPID.D = PID_D_DEF;
+	}
+
+	for ( i = 0 ; i < 4 ; ++i )
+	if ( dfBVOffset[i] < BVO_MIN || dfBVOffset[i] > BVO_MAX )
+		dfBVOffset[i] = 0;
+
 }
 
 
-//=============================================================================
+//=========================================================================
 //----- (000018D0) --------------------------------------------------------
 __myevic__ int FMCCheckConfig( unsigned long cfg[] )
 {
@@ -623,7 +756,7 @@ __myevic__ int FMCCheckConfig( unsigned long cfg[] )
 }
 
 
-//=============================================================================
+//=========================================================================
 //----- (00001926) --------------------------------------------------------
 __myevic__ void FMCRead256( uint32_t u32Addr, uint32_t *pu32Buf )
 {
@@ -635,7 +768,7 @@ __myevic__ void FMCRead256( uint32_t u32Addr, uint32_t *pu32Buf )
 }
 
 
-//=============================================================================
+//=========================================================================
 //----- (00001CEC) --------------------------------------------------------
 __myevic__ uint32_t ReadDataFlash( uint32_t u32Addr, uint32_t *pu32Buf )
 {
@@ -664,7 +797,7 @@ __myevic__ uint32_t ReadDataFlash( uint32_t u32Addr, uint32_t *pu32Buf )
 }
 
 
-//=============================================================================
+//=========================================================================
 //----- (0000119C) --------------------------------------------------------
 __myevic__ uint32_t CalcPageCRC( uint32_t *pu32Addr )
 {
@@ -691,7 +824,7 @@ __myevic__ uint32_t CalcPageCRC( uint32_t *pu32Addr )
 }
 
 
-//=============================================================================
+//=========================================================================
 //----- (00001FD0) --------------------------------------------------------
 // Writes 256 bytes from address from pu32Data to first free page
 // in DF after u32Addr
@@ -729,15 +862,15 @@ __myevic__ void WriteDataFlash( uint32_t u32Addr, const uint32_t *pu32Data )
 }
 
 
-//=============================================================================
+//=========================================================================
 //----- (00001D30) --------------------------------------------------------
 __myevic__ void UpdateDataFlash()
 {
 	uint8_t *df;
 	uint32_t idx;
 
-	dfAtoRez = AtoRez;
-	dfAtoStatus = AtoStatus;
+//	dfAtoRez = AtoRez;
+//	dfAtoStatus = AtoStatus;
 
 	df = (uint8_t*)&DataFlash.params;
 
@@ -759,11 +892,8 @@ __myevic__ void UpdateDataFlash()
 	}
 }
 
-//=============================================================================
 
-const uint32_t GCUID[3] = { 0x000F00EF, 0xFF25C498, 0x00002574 };
-
-//=============================================================================
+//=========================================================================
 //----- (00001940) --------------------------------------------------------
 __myevic__ void InitDataFlash()
 {
@@ -876,13 +1006,6 @@ __myevic__ void InitDataFlash()
 				break;
 			default:
 				DisplayModel = 0;
-
-				for ( i = 0 ; i < 3 ; ++i )
-				{
-					if ( dffmcUID[i] != GCUID[i] )
-						break;
-				}
-				if ( i == 3 ) gFlags.scr_noinv=1;
 				break;
 		}
 	}
@@ -912,13 +1035,20 @@ __myevic__ void InitDataFlash()
 
 	dfFWVersion	= FWVERSION;
 
-	MaxVolts = 900;
+	if ( ISRX300 )
+	{
+		MaxVolts = 990;
+	}
+	else
+	{
+		MaxVolts = 900;
+	}
 
 	if ( ISEVICBASIC )
 	{
 		MaxPower = 600;
 	}
-	else if ( ISVTWO || ISEGRIPII || ISCUBOMINI )
+	else if ( ISVTWO || ISEGRIPII || ISCUBOMINI || ISRXMINI )
 	{
 		MaxPower = 800;
 	}
@@ -931,13 +1061,17 @@ __myevic__ void InitDataFlash()
 		MaxPower = 1500;
 		gFlags.batt_unk = 1;
 	}
-	else if ( ISCUBOID )
+	else if ( ISCUBOID || ISCUBO200 )
 	{
 		MaxPower = 2000;
 	}
 	else if ( ISRX200S || ISRX23 )
 	{
 		MaxPower = 2500;
+	}
+	else if ( ISRX300 )
+	{
+		MaxPower = 3000;
 	}
 	else
 	{
@@ -990,7 +1124,7 @@ __myevic__ void InitDataFlash()
 }
 
 
-//=============================================================================
+//=========================================================================
 //----- (0000169C) --------------------------------------------------------
 // Writes 2kB from RAM R1 to DF R0
 __myevic__ void FMCWritePage( uint32_t u32Addr, uint32_t *pu32Data )
@@ -1001,7 +1135,7 @@ __myevic__ void FMCWritePage( uint32_t u32Addr, uint32_t *pu32Data )
 	}
 }
 
-//=============================================================================
+//=========================================================================
 //----- (000016D0) --------------------------------------------------------
 // Compares 2kB (0x800) DF @R0 with RAM @R1
 __myevic__ uint32_t FMCVerifyPage( uint32_t u32Addr, uint32_t *pu32Data )
@@ -1058,7 +1192,7 @@ __myevic__ uint16_t GetShuntRezValue()
 {
 	uint16_t rez;
 
-	if ( ISPRESA75W || ISEVICAIO )
+	if ( ISPRESA75W || ISEVICAIO || ISRXMINI )
 	{
 		rez = 100;
 	}
@@ -1066,9 +1200,23 @@ __myevic__ uint16_t GetShuntRezValue()
 	{
 		rez = 92;
 	}
-	else if ( ISVTWOMINI || ISVTWO )
+	else if ( ISVTWO || ISCUBO200 )
 	{
 		rez = 115;
+	}
+	else if ( ISVTWOMINI )
+	{
+		switch ( dfHWVersion )
+		{
+			case 100:
+			default:
+				rez = 115;
+				break;
+
+			case 101:
+				rez = 119;
+				break;
+		}
 	}
 	else if ( ISEGRIPII || ISEVICBASIC )
 	{
@@ -1139,6 +1287,10 @@ __myevic__ uint16_t GetShuntRezValue()
 	{
 		rez = 110;
 	}
+	else if ( ISRX300 )
+	{
+		rez = 106;
+	}
 	else
 	{
 		switch ( dfHWVersion )
@@ -1176,30 +1328,141 @@ __myevic__ uint16_t GetShuntRezValue()
 
 
 //=========================================================================
-// Retrieve the Logo height (0=No logo)
+// Profile management
 //-------------------------------------------------------------------------
-__myevic__ int GetLogoHeight()
+// Reload data filter.
+// Filters relevant dataflash data for storage in a profile.
+// This array will have to be extended if parameters comes to be bigger
+// than 256 bytes one day.
+//-------------------------------------------------------------------------
+const uint8_t ProfileFilter[32] =
 {
-	uint32_t data;
-	int w, h;
+/* 0000 */	0b00000000,
+/* 0008 */	0b00101111,
+/* 0010 */	0b11111111,
+/* 0018 */	0b11111111,
+/* 0020 */	0b00000000,
+/* 0028 */	0b00000000,
+/* 0030 */	0b00000000,
+/* 0038 */	0b00111111,
+/* 0040 */	0b11111111,
+/* 0048 */	0b11111100,
+/* 0050 */	0b00000000,
+/* 0058 */	0b00000000,
+/* 0060 */	0b00000000,
+/* 0068 */	0b00000000,
+/* 0070 */	0b00000011,
+/* 0078 */	0b00000000,
+/* 0080 */	0b11101011,
+/* 0088 */	0b11111110,
+/* 0090 */	0b10000000,
+/* 0098 */	0b00000000,
+/* 00A0 */	0b00000000,
+/* 00A8 */	0b00000000,
+/* 00B0 */	0b00000000,
+/* 00B8 */	0b00000001,
+/* 00C0 */	0b00111000,
+/* 00C8 */	0b00000111,
+/* 00D0 */	0b11111111,
+/* 00D8 */	0b11111111,
+/* 00E0 */	0b11100000,
+/* 00E8 */	0b00000000,
+/* 00F0 */	0b00000000,
+/* 00F8 */	0b00000000
+};
 
-	SYS_UnlockReg();
-	FMC_ENABLE_ISP();
+//-------------------------------------------------------------------------
+// Apply newly reloaded parameters
+//-------------------------------------------------------------------------
+__myevic__ void ApplyParameters()
+{
+	InitDisplay();
+	LEDGetColor();
+	SetBatteryModel();
+	ModeChange();
 
-	data = FMC_Read( DATAFLASH_LOGO_1306_BASE );
-	
-	FMC_DISABLE_ISP();
-	SYS_LockReg();
-
-	h = 0;
-	w = data & 0xFF;
-
-	if ( w == 64 )
-	{
-		h = ( data & 0xFF00 ) >> 8;
-		if ( h < 40 || h > 63 ) h = 0;
-	}
-
-	return h;
+	gFlags.refresh_display = 1;
 }
 
+
+//-------------------------------------------------------------------------
+// Restore a given profile
+//-------------------------------------------------------------------------
+__myevic__ void LoadProfile( int p )
+{
+	uint32_t addr, idx;
+	dfParams_t *params;
+	uint8_t *s, *d;
+
+	if ( p >= DATAFLASH_PROFILES_MAX )
+		return;
+
+	addr = DATAFLASH_PROFILES_BASE + p * DATAFLASH_PARAMS_SIZE;
+
+	params = (dfParams_t*)addr;
+
+	if (( params->Magic == DFMagicNumber ) && ( params->PCRC == CalcPageCRC( (uint32_t*)params ) ))
+	{
+		s = (uint8_t*)params;
+		d = (uint8_t*)DataFlash.params;
+
+		for ( idx = 0 ; idx < DATAFLASH_PARAMS_SIZE ; ++idx )
+			if ( ProfileFilter[idx/8] & ( 0x80 >> ( idx & 7 ) ) )
+				d[idx] = s[idx];
+
+		DFCheckValuesValidity();
+		ApplyParameters();
+	}
+
+	dfProfile = p;
+	UpdateDataFlash();
+}
+
+
+//-------------------------------------------------------------------------
+// Save the current profile
+//-------------------------------------------------------------------------
+__myevic__ void SaveProfile()
+{
+	uint8_t *df;
+	uint8_t *profile;
+
+	uint32_t idx;
+	uint32_t offset, addr;
+
+	uint8_t page[FMC_FLASH_PAGE_SIZE] __attribute__((aligned(4)));
+
+	offset = dfProfile * DATAFLASH_PARAMS_SIZE;
+	addr   = DATAFLASH_PROFILES_BASE + offset;
+
+	profile = (uint8_t*)addr;
+
+	df = (uint8_t*)&DataFlash.params;
+
+	// Only save profile if some of the relevant data has been modified
+
+	for ( idx = 0 ; idx < DATAFLASH_PARAMS_SIZE ; ++idx )
+	{
+		if ( ProfileFilter[idx/8] & ( 0x80 >> ( idx & 7 ) ) )
+			if ( df[idx] != profile[idx] )
+				break;
+	}
+
+	if ( idx != DATAFLASH_PARAMS_SIZE )
+	{
+		dfCRC = CalcPageCRC( DataFlash.params );
+
+		MemCpy( page, (void*)DATAFLASH_PROFILES_BASE, FMC_FLASH_PAGE_SIZE );
+		MemCpy( page + offset, df, DATAFLASH_PARAMS_SIZE );
+
+		SYS_UnlockReg();
+		FMC_ENABLE_ISP();
+		FMC_ENABLE_AP_UPDATE();
+
+		FMCEraseWritePage( DATAFLASH_PROFILES_BASE, (uint32_t*)page );
+
+		FMC_DISABLE_AP_UPDATE();
+		FMC_DISABLE_ISP();
+		SYS_LockReg();
+	}
+}

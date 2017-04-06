@@ -36,8 +36,8 @@ struct mbitdesc_s
 {
 	const uint8_t div;
 	const uint8_t pos;
-	const uint16_t* const on;
-	const uint16_t* const off;
+	const uint8_t* const on;
+	const uint8_t* const off;
 };
 
 struct mvaluedesc_s
@@ -48,9 +48,9 @@ struct mvaluedesc_s
 	const uint8_t dp;
 	const int16_t min;
 	const int16_t max;
-	void (*draw)( int x, int y, int v, uint8_t dp, uint16_t z, uint8_t nd );
-	const uint16_t* const unit_s;
-	const uint16_t unit_c;
+	void (*draw)( int x, int y, int v, uint8_t dp, uint8_t z, uint8_t nd );
+	const uint8_t* const unit_s;
+	const uint8_t unit_c;
 	const uint8_t z;
 	const uint8_t inc;
 	const int16_t def1;
@@ -67,7 +67,7 @@ struct mdata_s
 
 struct mitem_s
 {
-	const uint16_t* const caption;
+	const uint8_t* const caption;
 	const void* const action;
 	const uint8_t event;
 	const uint8_t action_type;
@@ -75,7 +75,7 @@ struct mitem_s
 
 struct menu_s
 {
-	const uint16_t* const caption;
+	const uint8_t* const caption;
 	const struct menu_s const *parent;
 	void (*on_enter)();
 	void (*on_drawitem)( int mi, int y, int sel );
@@ -91,12 +91,131 @@ uint8_t CurrentMenuItem;
 
 
 //-----------------------------------------------------------------------------
+__myevic__ void ProfileMenuIDraw( int it, int line, int sel )
+{
+	if ( it >= DATAFLASH_PROFILES_MAX )
+		return;
+
+	dfParams_t *p = (dfParams_t*)( DATAFLASH_PROFILES_BASE + it * DATAFLASH_PARAMS_SIZE );
+
+	DrawImage( 4, line+2, 0x0C + it );
+	if ( sel ) InvertRect( 0, line, 13, line+12 );
+
+	if ( p->PCRC == 0xFFFF )
+		return;
+
+	uint8_t mode;
+	uint16_t rez;
+
+	const uint8_t *modes[] =
+		{ String_NI, String_TI, String_SS, String_TC, String_PW, String_BY, String_SM };
+
+	if ( it == dfProfile )
+	{
+		mode = dfMode;
+		rez  = dfResistance;
+	}
+	else
+	{
+		mode = p->Mode;
+		rez  = p->Resistance;
+	}
+
+	if ( mode > 6 )
+		return;
+
+	DrawString( modes[mode], 18, line+2 );
+	DrawValue( 34, line+2, rez, 2, 0x0B, 3 );
+	DrawImage( 56, line+2, 0xC0 );
+}
+
+
+__myevic__ int ProfileMenuOnEvent( int event )
+{
+	if ( CurrentMenuItem >= DATAFLASH_PROFILES_MAX )
+		return 0;
+
+	switch ( event )
+	{
+		case 1:
+			break;
+
+		case 15:
+			if ( CurrentMenuItem != dfProfile )
+			{
+				SaveProfile();
+				LoadProfile( CurrentMenuItem );
+			}
+			Event = EVENT_EXIT_MENUS;
+			break;
+
+		case EVENT_LONG_FIRE:
+			if ( CurrentMenuItem != dfProfile )
+			{
+				SaveProfile();
+				dfProfile = CurrentMenuItem;
+			}
+			Event = EVENT_EXIT_MENUS;
+			break;
+
+		default:
+			return 0;
+	}
+
+	return 1;
+}
+
+
+//-----------------------------------------------------------------------------
+
+__myevic__ void AlgoMenuIDraw( int it, int line, int sel )
+{
+	switch ( it )
+	{
+		case 0:	// Algo
+			DrawFillRect( 30, line, 63, line+12, 0 );
+			switch ( dfTCAlgo )
+			{
+				case TCALGO_JOY:
+				default:
+					DrawStringRight( String_Off, 64, line + 2 );
+					break;
+
+				case TCALGO_SWEET:
+					DrawStringRight( String_Sweet, 64, line + 2 );
+					break;
+
+				case TCALGO_BOOST:
+					DrawStringRight( String_Boost, 64, line + 2 );
+					break;
+
+				case TCALGO_PID:
+					DrawStringRight( String_PID, 64, line + 2 );
+					break;
+			}
+			break;
+	}
+}
+
+__myevic__ void AlgoMenuOnClick()
+{
+	switch ( CurrentMenuItem )
+	{
+		case 0: // Algo
+			if ( ++dfTCAlgo >= TCALGO_MAX ) dfTCAlgo = 0;
+			break;
+	}
+
+	gFlags.refresh_display = 1;
+}
+
+//-----------------------------------------------------------------------------
 
 __myevic__ void VapingMenuIDraw( int it, int line, int sel )
 {
 	switch ( it )
 	{
-		case 2:	// Protec
+		case 4:	// Protec
 			DrawFillRect( 34, line, 63, line+12, 0 );
 			DrawImage( 58, line+2, 0x94 );
 			DrawValueRight( 56, line+2, dfProtec, 1, 0x0B, 0 );
@@ -104,12 +223,12 @@ __myevic__ void VapingMenuIDraw( int it, int line, int sel )
 				InvertRect( 0, line, 63, line+12 );
 			break;
 
-		case 3:	// Vaped
+		case 5:	// Vaped
 			DrawFillRect( 39, line, 63, line+12, 0 );
 			DrawString( dfStatus.vapedml ? String_ml : String_mld, 43, line+2 );
 			break;
 
-		case 4: // mL/kJ
+		case 6: // mL/kJ
 			DrawFillRect( 39, line, 63, line+12, 0 );
 			DrawValueRight( 61, line+2, dfVVRatio, 0, 0x0B, 0 );
 			if ( sel && gFlags.edit_value )
@@ -123,16 +242,16 @@ __myevic__ void VapingMenuOnClick()
 {
 	switch ( CurrentMenuItem )
 	{
-		case 2:	// Protec
+		case 4:	// Protec
 			gFlags.edit_value ^= 1;
 			break;
 
-		case 3:	// Vaped
+		case 5:	// Vaped
 			dfStatus.vapedml ^= 1;
 			UpdateDFTimer = 50;
 			break;
 
-		case 4: // mL/kJ
+		case 6: // mL/kJ
 			gFlags.edit_value ^= 1;
 			break;
 	}
@@ -150,10 +269,10 @@ __myevic__ int VapingMenuOnEvent( int event )
 
 	switch ( event )
 	{
-		case 2:
+		case 2:	// Plus
 			switch ( CurrentMenuItem )
 			{
-				case 2: // Protec
+				case 4: // Protec
 					if ( ++dfProtec > FIRE_PROTEC_MAX )
 					{
 						if ( KeyTicks < 5 ) dfProtec = FIRE_PROTEC_MIN;
@@ -162,7 +281,7 @@ __myevic__ int VapingMenuOnEvent( int event )
 					vret = 1;
 					break;
 
-				case 4: // mL/kJ
+				case 6: // mL/kJ
 					if ( ++dfVVRatio > VVEL_MAX_RATIO )
 					{
 						if ( KeyTicks < 5 ) dfVVRatio = VVEL_MIN_RATIO;
@@ -173,10 +292,10 @@ __myevic__ int VapingMenuOnEvent( int event )
 			}
 			break;
 
-		case 3:
+		case 3:	// Minus
 			switch ( CurrentMenuItem )
 			{
-				case 2: // Protec
+				case 4: // Protec
 					if ( --dfProtec < FIRE_PROTEC_MIN )
 					{
 						if ( KeyTicks < 5 ) dfProtec = FIRE_PROTEC_MAX;
@@ -185,7 +304,7 @@ __myevic__ int VapingMenuOnEvent( int event )
 					vret = 1;
 					break;
 
-				case 4: // mL/kJ
+				case 6: // mL/kJ
 					if ( --dfVVRatio < VVEL_MIN_RATIO )
 					{
 						if ( KeyTicks < 5 ) dfVVRatio = VVEL_MAX_RATIO;
@@ -241,6 +360,10 @@ __myevic__ void ClicksMenuIDraw( int it, int line, int sel )
 		case CLICK_ACTION_ON_OFF:
 			DrawString( String_OnOff, 20, line+2 );
 			break;
+
+		case CLICK_ACTION_PROFILE:
+			DrawString( String_ProfPlus, 20, line+2 );
+			break;
 	}
 }
 
@@ -265,9 +388,15 @@ __myevic__ void ClockMenuIDraw( int it, int line, int sel )
 	switch ( it )
 	{
 		case 4:	// Format
-			DrawFillRect( 36, line, 63, line+12, 0 );
-			DrawString( dfStatus.mdy ? String_MDY : String_DMY, 40, line+2 );
+		{
+			const uint8_t *strings[] =
+				{ String_DMY1, String_MDY, String_DMY2, String_YMD };
+			int f = dfStatus.dfmt1 | ( dfStatus.dfmt2 << 1 );
+			const uint8_t *s = strings[f];
+			DrawFillRect( 28, line, 63, line+12, 0 );
+			DrawString( s, 32, line+2 );
 			break;
+		}
 
 		case 6:	// Dial
 			DrawFillRect( 36, line, 63, line+12, 0 );
@@ -290,10 +419,15 @@ __myevic__ void ClockMenuOnClick()
 			break;
 
 		case 4:	// Format
-			dfStatus.mdy ^= 1;
+		{
+			int f = dfStatus.dfmt1 | ( dfStatus.dfmt2 << 1 );
+			if ( ++f > 3 ) f = 0;
+			dfStatus.dfmt1 = f & 1;
+			dfStatus.dfmt2 = f >> 1;
 			UpdateDFTimer = 50;
 			gFlags.refresh_display = 1;
 			break;
+		}
 
 		case 6:	// Dial
 			dfStatus.digclk ^= 1;
@@ -315,45 +449,27 @@ __myevic__ void IFMenuIDraw( int it, int line, int sel )
 
 	switch ( it )
 	{
-		case 0:	// Batt%
-			if ( !dfStatus.battpc )
-			{
-				DrawString( String_Off, 44, line+2 );
-			}
-			else
-			{
-				if ( dfStatus.battv )
-				{
-					DrawImage( 44, line+2, 0xB1 );
-				}
-				else
-				{
-					DrawImage( 44, line+2, 0xC2 );
-				}
-			}
-			break;
-
-		case 1:	// 1Watt
+		case 0:	// 1Watt
 			DrawString( dfStatus.onewatt ? String_On : String_Off, 44, line+2 );
 			break;
 
-		case 2:	// 1C5F
+		case 1:	// 1C5F
 			DrawString( dfStatus.onedegree ? String_On : String_Off, 44, line+2 );
 			break;
 
-		case 3:	// Wake -+
+		case 2:	// Wake -+
 			DrawString( dfStatus.wakeonpm ? String_On : String_Off, 44, line+2 );
 			break;
 
-		case 4:	// Font
+		case 3:	// Font
 			DrawImage( 44, line+2, dfStatus.font ? 0x9D : 0x9C );
 			break;
 
-		case 5:	// Temp
+		case 4:	// Temp
 			DrawImage( 44, line+2, dfIsCelsius ? 0xC9 : 0xC8 );
 			break;
 
-		case 6:	// TDom
+		case 5:	// TDom
 			DrawString( dfStatus.priopwr ? String_On : String_Off, 44, line+2 );
 			break;
 
@@ -367,31 +483,12 @@ __myevic__ void IFMenuOnClick()
 {
 	switch ( CurrentMenuItem )
 	{
-		case 0:	// Batt%
-			if ( !dfStatus.battpc )
-			{
-				dfStatus.battpc = 1;
-				dfStatus.battv = 0;
-			}
-			else if ( !dfStatus.battv )
-			{
-				dfStatus.battv = 1;
-			}
-			else
-			{
-				dfStatus.battv = 0;
-				dfStatus.battpc = 0;
-			}
-			break;
-
-		case 1:	// 1Watt
+		case 0:	// 1Watt
 			dfStatus.onewatt ^= 1;
 			if ( dfStatus.onewatt )
 			{
 				WattsInc = 10;
-				dfPower -= dfPower % 10;
-				dfTCPower -= dfTCPower % 10;
-				dfPreheatPwr -= dfPreheatPwr % 10;
+				RoundPowers();
 			}
 			else
 			{
@@ -399,7 +496,7 @@ __myevic__ void IFMenuOnClick()
 			}
 			break;
 
-		case 2:	// 1C5F
+		case 1:	// 1C5F
 			dfStatus.onedegree ^= 1;
 			if ( !dfStatus.onedegree )
 			{
@@ -407,22 +504,22 @@ __myevic__ void IFMenuOnClick()
 			}
 			break;
 
-		case 3:	// Wake -+
+		case 2:	// Wake -+
 			dfStatus.wakeonpm ^= 1;
 			break;
 
-		case 4:	// Font
+		case 3:	// Font
 			dfStatus.font ^= 1;
 			DisplaySetFont();
 			break;
 
-		case 5:	// Temp
+		case 4:	// Temp
 			dfIsCelsius ^= 1;
 			if ( dfIsCelsius )
 			{
 				dfTemp = FarenheitToC( dfTemp );
-				if ( dfTemp < 150 ) dfTemp = 150;
-				if ( dfTemp > 260 ) dfTemp = 260;
+				if ( dfTemp < 100 ) dfTemp = 100;
+				if ( dfTemp > 315 ) dfTemp = 315;
 			}
 			else
 			{
@@ -430,12 +527,12 @@ __myevic__ void IFMenuOnClick()
 				int rem = dfTemp % 5;
 				dfTemp -= rem;
 				if ( rem >= 3 ) dfTemp += 5;
-				if ( dfTemp < 300 ) dfTemp = 300;
-				if ( dfTemp > 500 ) dfTemp = 500;
+				if ( dfTemp < 200 ) dfTemp = 200;
+				if ( dfTemp > 600 ) dfTemp = 600;
 			}
 			break;
 
-		case 6:	// TDom
+		case 5:	// TDom
 			dfStatus.priopwr ^= 1;
 			break;
 
@@ -453,7 +550,7 @@ __myevic__ void IFMenuOnClick()
 
 __myevic__ void PreheatIDraw( int it, int line, int sel )
 {
-	if ( it > 2 ) return;
+	if ( it > 3 ) return;
 
 	int v, dp, img;
 
@@ -480,11 +577,11 @@ __myevic__ void PreheatIDraw( int it, int line, int sel )
 					p = p / 10;
 					dp = 0;
 				}
-				DrawImage(  4, 90, 0xAB );
-				DrawHLine(  12, 93, 14, 1 );
-				DrawHLine(  12, 96, 14, 1 );
-				DrawValueRight( 37, 90, p, dp, 0x0B, 0 );
-				DrawImage( 39, 90, 0x98 );
+				DrawImage(  4, 102, 0xAB );
+				DrawHLine(  12, 105, 14, 1 );
+				DrawHLine(  12, 108, 14, 1 );
+				DrawValueRight( 37, 102, p, dp, 0x0B, 0 );
+				DrawImage( 39, 102, 0x98 );
 
 				dp = 0;
 				img = 0xC2;
@@ -519,12 +616,24 @@ __myevic__ void PreheatIDraw( int it, int line, int sel )
 		DrawImage( 54, line+2, img );
 	}
 
-	if ( gFlags.edit_value && sel )
-	{
+	if ( sel && gFlags.edit_value )
 		InvertRect( 0, line, 63, line+12 );
-	}
 }
 
+
+__myevic__ void DrawPreheatDelay( int x, int y, int v, uint8_t dp, uint8_t z, uint8_t nd )
+{
+	if ( v == 0 )
+	{
+		DrawString( String_Off, x, y+2 );
+	}
+	else
+	{
+		DrawValue( x+1, y+2, v / 60, 0, 0x0B, 1 );
+		DrawImage( x+6, y+2, 0xD7 );
+		DrawValue( x+9, y+2, v % 60, 0, 0x0B, 2 );
+	}
+}
 
 __myevic__ int PreheatMEvent( int event )
 {
@@ -534,7 +643,7 @@ __myevic__ int PreheatMEvent( int event )
 
 	switch ( event )
 	{
-		case 1:
+		case 1:	// Fire
 			if ( CurrentMenuItem == 0 )
 			{
 				dfStatus.phpct ^= 1;
@@ -551,16 +660,13 @@ __myevic__ int PreheatMEvent( int event )
 					if ( dfPreheatPwr < 10 ) dfPreheatPwr = 10;
 				}
 			}
-			else
-			{
-				gFlags.edit_value ^= 1;
-			}
+			gFlags.edit_value ^= 1;
 			UpdateDFTimer = 50;
 			gFlags.refresh_display = 1;
 			vret = 1;
 			break;
 
-		case 2:
+		case 2:	// Plus
 			if ( gFlags.edit_value )
 			{
 				if ( CurrentMenuItem == 1 )
@@ -589,7 +695,7 @@ __myevic__ int PreheatMEvent( int event )
 			}
 			break;
 
-		case 3:
+		case 3:	// Minus
 			if ( gFlags.edit_value )
 			{
 				if ( CurrentMenuItem == 1 )
@@ -618,12 +724,6 @@ __myevic__ int PreheatMEvent( int event )
 			}
 			break;
 
-		case EVENT_LONG_FIRE:
-			UpdateDataFlash();
-			MainView();
-			vret = 1;
-			break;
-
 	}
 	return vret;
 }
@@ -633,14 +733,25 @@ __myevic__ int PreheatMEvent( int event )
 
 __myevic__ void BVOMenuIDraw( int it, int line, int sel )
 {
+	if ( !it )
+	{
+		for ( int i = 0 ; i < NumBatteries ; ++i )
+		{
+			DrawValue(  2 + 32 * ( i & 1 ), 100 + ( i >> 1 ) * 12, BattVolts[i], 2, 0x0B, 3 );
+			DrawImage( 23 + 32 * ( i & 1 ), 100 + ( i >> 1 ) * 12, 0x7D );
+		}
+		ScreenRefreshTimer = 10;
+	}
+
 	if ( it >= CurrentMenu->nitems - 1 )
 		return;
 
-	DrawFillRect( 32, line, 63, line+12, 0 );
+	DrawFillRect( 22, line, 63, line+12, 0 );
 
 	uint16_t bvo = ( dfBVOffset[it] >= 0 ) ? dfBVOffset[it] : -dfBVOffset[it];
-	DrawImage( 36, line+2, ( dfBVOffset[it] >= 0 ) ? 0xFC : 0xFD );
-	DrawValue( 44, line+2, bvo, 0, 0x0B, 2 );
+	DrawImage( 26, line+2, ( dfBVOffset[it] >= 0 ) ? 0xFC : 0xFD );
+	DrawValue( 34, line+2, bvo, 2, 0x0B, 3 );
+	DrawImage( 55, line+2, 0x97 );
 	if ( gFlags.edit_value && sel )
 		InvertRect( 0, line, 63, line+12 );
 }
@@ -768,17 +879,13 @@ __myevic__ void ExpertMenuOnClick()
 			if ( ++dfBatteryModel >= GetNBatteries() )
 				dfBatteryModel = 0;
 			SetBatteryModel();
-			gFlags.read_battery = 1;
-			NewBatteryVoltage();
-			SetBatMaxPower();
 			break;
 
 		case 8:	// BVO
 			break;
 
-		case 9:	// Exit
+		case 9:	// Back
 			UpdateDataFlash();
-			MainView();
 			break;
 	}
 
@@ -828,6 +935,12 @@ __myevic__ int ExpertMenuOnEvent( int event )
 					AtoShuntRez = GetShuntRezValue();
 					dfShuntRez = 0;
 					gFlags.edit_value = 0;
+					vret = 1;
+					break;
+
+				case 7:	// Battery model
+					dfBatteryModel = BATTERY_CUSTOM;
+					SetBatteryModel();
 					vret = 1;
 					break;
 			}
@@ -1053,6 +1166,7 @@ __myevic__ void ModesIClick()
 
 //-----------------------------------------------------------------------------
 
+uint8_t CoilShift;
 uint8_t *CoilSelectedLock;
 uint16_t *CoilSelectedRez;
 
@@ -1067,6 +1181,7 @@ __myevic__ void CoilsSelectRez( uint8_t mode )
 		default:
 			break;
 	}
+	CoilShift = mode << 2;
 }
 
 
@@ -1091,20 +1206,41 @@ __myevic__ void CoilsMEnter()
 
 __myevic__ void CoilsIDraw( int it, int line, int sel )
 {
-	if ( it > 3 ) return;
-	int rez = 0;
-	short img = 0xC0;
-	CoilsSelectRez( it );
-	rez = *CoilSelectedRez;
-	if ( *CoilSelectedLock ) img = 0xC3;
-	DrawFillRect( 32, line, 63, line+12, 0 );
-	DrawValue( 34, line+2, rez, 2, 0x0B, 3 );
-	DrawImage( 56, line+2, img );
+	switch ( it )
+	{
+		case 0:
+		case 1:
+		case 2:
+		case 3:
+		{
+			int rez = 0;
+			short img = 0xC0;
+			CoilsSelectRez( it );
+			rez = *CoilSelectedRez * 10;
+			rez += ( dfMillis >> CoilShift ) & 0xf;
+			if ( *CoilSelectedLock ) img = 0xC3;
+			DrawFillRect( 26, line, 63, line+12, 0 );
+			DrawValue( 28, line+2, rez, 3, 0x0B, 4 );
+			DrawImage( 56, line+2, img );
+			CoilsSelectRez( CurrentMenuItem );
+			break;
+		}
+
+		case 5:	// Check
+		{
+			const uint8_t *s;
+			DrawFillRect( 36, line, 63, line+12, 0 );
+			s = ( ISMODETC(dfMode) && dfStatus.chkmodeoff ) ?
+				String_No : String_Yes;
+			DrawString( s, 44, line+2 );
+			break;
+		}
+	}
+
 	if ( gFlags.edit_value && sel )
 	{
 		InvertRect( 0, line, 63, line+12 );
 	}
-	CoilsSelectRez( CurrentMenuItem );
 }
 
 __myevic__ void CoilsIClick()
@@ -1116,10 +1252,23 @@ __myevic__ void CoilsIClick()
 			dfRezTI  = 0; dfRezLockedTI  = 0;
 			dfRezSS  = 0; dfRezLockedSS  = 0;
 			dfRezTCR = 0; dfRezLockedTCR = 0;
+			dfMillis = 0;
 			for ( int i = 0 ; i < 10 ; ++i )
 			{
 				dfSavedCfgRez[i] = 0;
 				dfSavedCfgPwr[i] = 0;
+			}
+			ResetResistance();
+			if ( AtoStatus == 4 )
+			{
+				SwitchRezLock();
+			}
+			break;
+
+		case 5:	// Check
+			if ( ISMODETC(dfMode) )
+			{
+				dfStatus.chkmodeoff ^= 1;
 			}
 			break;
 	}
@@ -1143,6 +1292,9 @@ __myevic__ int CoilsMEvent( int event )
 	if ( CurrentMenuItem > 3 )
 		return vret;
 
+	int millis = ( dfMillis >> CoilShift ) & 0xf;
+	int rez = *CoilSelectedRez * 10 + millis;
+
 	if ( event != 1 ) rmodified = 0;
 
 	switch ( event )
@@ -1153,26 +1305,24 @@ __myevic__ int CoilsMEvent( int event )
 			{
 				*CoilSelectedLock ^= 1;
 			}
-			rmodified = 0;
 			gFlags.refresh_display = 1;
+			rmodified = 0;
 			vret = 1;
 			break;
 
 		case 2:
 			if ( gFlags.edit_value )
 			{
-				if ( *CoilSelectedRez == 0 )
+				if ( rez == 0 )
 				{
-					*CoilSelectedRez = 5;
+					rez = 50;
 				}
-				else if ( *CoilSelectedRez < 150 )
+				else if ( rez < 1500 )
 				{
-					++*CoilSelectedRez;
+					++rez;
 				}
 				*CoilSelectedLock = 1;
 				rmodified = 1;
-				UpdateDFTimer = 50;
-				gFlags.refresh_display = 1;
 				vret = 1;
 			}
 			break;
@@ -1180,38 +1330,35 @@ __myevic__ int CoilsMEvent( int event )
 		case 3:
 			if ( gFlags.edit_value )
 			{
-				if ( *CoilSelectedRez == 5 )
+				if ( rez == 50 )
 				{
-					*CoilSelectedRez = 0;
+					rez = 0;
 					*CoilSelectedLock = 0;
 				}
-				else if ( *CoilSelectedRez > 5 )
+				else if ( rez > 50 )
 				{
-					--*CoilSelectedRez;
+					--rez;
 					*CoilSelectedLock = 1;
 				}
 				rmodified = 1;
-				UpdateDFTimer = 50;
-				gFlags.refresh_display = 1;
 				vret = 1;
 			}
 			break;
 
 		case EVENT_LONG_FIRE:
-			*CoilSelectedRez = 0;
+			rez = 0;
 			*CoilSelectedLock = 0;
 			if ( CurrentMenuItem == dfMode )
 			{
 				ResetResistance();
 				if ( AtoStatus == 4 )
 				{
-					*CoilSelectedRez = AtoRez;
+					rez = 10 * AtoRez + AtoMillis;
 					*CoilSelectedLock = 1;
 				}
 			}
-			UpdateDFTimer = 50;
+			rmodified = 1;
 			gFlags.edit_value = 0;
-			gFlags.refresh_display = 1;
 			vret = 1;
 			break;
 
@@ -1219,10 +1366,22 @@ __myevic__ int CoilsMEvent( int event )
 
 	if ( rmodified )
 	{
+		*CoilSelectedRez = rez / 10;
+		millis = rez % 10;
+		dfMillis &= ~( 0xf << CoilShift );
+		dfMillis |= millis << CoilShift;
+
+		UpdateDFTimer = 50;
+		gFlags.refresh_display = 1;
+
 		if ( CurrentMenuItem == dfMode )
 		{
 			AtoRez = *CoilSelectedRez;
+			AtoMillis = millis;
+
 			dfResistance = *CoilSelectedRez;
+			RezMillis = millis;
+
 			SetAtoLimits();
 		}
 	}
@@ -1233,7 +1392,7 @@ __myevic__ int CoilsMEvent( int event )
 
 //-----------------------------------------------------------------------------
 
-__myevic__ void DrawTCRP( int x, int y, int v, uint8_t dp, uint16_t z, uint8_t nd )
+__myevic__ void DrawTCRP( int x, int y, int v, uint8_t dp, uint8_t z, uint8_t nd )
 {
 	if ( v == 0 )
 	{
@@ -1253,6 +1412,38 @@ __myevic__ int TCRSetOnEvent( int event )
 
 
 //-----------------------------------------------------------------------------
+
+__myevic__ void DrawLedColor( int x, int y, int v, uint8_t dp, uint8_t z, uint8_t nd )
+{
+	DrawValueRight( x, y + 2, v * 4, dp, z, nd );
+	DrawImage( x + 1, y + 2, 0xC2 );
+}
+
+__myevic__ void LedMenuEnter()
+{
+	LEDGetColor();
+	if ( ISEGRIPII || ISEVICAIO ) gFlags.led_on = 1;
+}
+
+__myevic__ int LedMenuEvent( int event )
+{
+	LEDSetColor();
+	return 0;
+}
+
+
+//-----------------------------------------------------------------------------
+
+__myevic__ void CurveMenuOnClick()
+{
+	if ( CurrentMenuItem == 1 )
+	{
+		ResetPowerCurve();
+	}
+}
+
+
+//-----------------------------------------------------------------------------
 // Forward declarations for parent menu pointers
 
 const menu_t MainMenu;
@@ -1261,6 +1452,7 @@ const menu_t ClockMenu;
 const menu_t ScreenMenu;
 const menu_t MiscsMenu;
 const menu_t IFMenu;
+const menu_t CurveMenu;
 const menu_t VapingMenu;
 const menu_t ExpertMenu;
 
@@ -1294,14 +1486,14 @@ const menu_t GameMenu =
 		{ String_Easy, 0, 0, 0 },
 		{ String_Normal, 0, 0, 0 },
 		{ String_Hard, 0, 0, 0 },
-		{ String_Exit, 0, EVENT_EXIT_MENUS, 0 }
+		{ String_Back, 0, EVENT_PARENT_MENU, 0 }
 	}
 };
 
 const menu_t ModesMenu =
 {
 	String_Modes,
-	&MainMenu,
+	&VapingMenu,
 	ModesMEnter+1,
 	ModesIDraw+1,
 	0,
@@ -1316,8 +1508,29 @@ const menu_t ModesMenu =
 		{ String_POWER_s, 0, 0, 0 },
 		{ String_BYPASS_s, 0, 0, 0 },
 		{ String_SMART_s, 0, 0, 0 },
-		{ String_Exit, 0, EVENT_EXIT_MENUS, 0 }
+		{ String_Back, 0, EVENT_PARENT_MENU, 0 }
 	}
+};
+
+const mvaluedesc_t PreheatDelayDesc =
+{
+	34, 37,
+	3, 2,
+	0, 180,
+	&DrawPreheatDelay+1,
+	0,
+	0,
+	0x0B,
+	1,
+	-1, 0
+};
+
+const mdata_t PreheatDelayData =
+{
+	&dfPHDelay,
+	&PreheatDelayDesc,
+	MITYPE_BYTE,
+	0
 };
 
 const menu_t PreheatMenu =
@@ -1329,12 +1542,13 @@ const menu_t PreheatMenu =
 	0,
 	0,
 	PreheatMEvent+1,
-	4,
+	5,
 	{
 		{ String_Unit, 0, 0, 0 },
 		{ String_Pwr, 0, 0, 0 },
 		{ String_Time, 0, 0, 0 },
-		{ String_Exit, 0, EVENT_EXIT_MENUS, 0 },
+		{ String_Delay, &PreheatDelayData, 0, MACTION_DATA },
+		{ String_Back, 0, EVENT_PARENT_MENU, 0 }
 	}
 };
 
@@ -1455,7 +1669,7 @@ const menu_t TCRSetMenu =
 		{ String_NI, &TCRNIData, 0, MACTION_DATA },
 		{ String_TI, &TCRTIData, 0, MACTION_DATA },
 		{ String_SS, &TCRSSData, 0, MACTION_DATA },
-		{ String_Exit, 0, EVENT_EXIT_MENUS, 0 }
+		{ String_Back, 0, EVENT_PARENT_MENU, 0 }
 	}
 };
 
@@ -1468,14 +1682,15 @@ const menu_t CoilsMgmtMenu =
 	CoilsISelect+1,
 	CoilsIClick+1,
 	CoilsMEvent+1,
-	6,
+	7,
 	{
 		{ String_NI, 0, 0, 0 },
 		{ String_TI, 0, 0, 0 },
 		{ String_SS, 0, 0, 0 },
 		{ String_TCR, 0, 0, 0 },
 		{ String_Zero_All, 0, 0, 0 },
-		{ String_Exit, 0, EVENT_EXIT_MENUS, 0 }
+		{ String_Check, 0, 0, 0 },
+		{ String_Back, 0, EVENT_PARENT_MENU, 0 }
 	}
 };
 
@@ -1492,7 +1707,7 @@ const menu_t CoilsMenu =
 	{
 		{ String_Manage, &CoilsMgmtMenu, 0, MACTION_SUBMENU },
 		{ String_TCRSet, &TCRSetMenu, 0, MACTION_SUBMENU },
-		{ String_Exit, 0, EVENT_EXIT_MENUS, 0 }
+		{ String_Back, 0, EVENT_PARENT_MENU, 0 }
 	}
 };
 
@@ -1505,13 +1720,69 @@ const menu_t Object3DMenu =
 	0,
 	Object3DOnClick+1,
 	0,
-	5,
+	6,
 	{
 		{ String_None, 0, EVENT_EXIT_MENUS, 0 },
 		{ String_Tetra, 0, EVENT_EXIT_MENUS, 0 },
 		{ String_Cube, 0, EVENT_EXIT_MENUS, 0 },
 		{ String_Octa, 0, EVENT_EXIT_MENUS, 0 },
+		{ String_Dodeca, 0, EVENT_EXIT_MENUS, 0 },
 		{ String_Isoca, 0, EVENT_EXIT_MENUS, 0 }
+	}
+};
+
+const mvaluedesc_t LedDesc =
+{
+	34, 53,
+	0, 0,
+	0, 25,
+	DrawLedColor+1,
+	0,
+	0xC2,
+	0x0B,
+	1,
+	26, 26
+};
+
+const mdata_t LedRedData =
+{
+	&LEDRed,
+	&LedDesc,
+	MITYPE_BYTE,
+	0
+};
+
+const mdata_t LedGreenData =
+{
+	&LEDGreen,
+	&LedDesc,
+	MITYPE_BYTE,
+	0
+};
+
+const mdata_t LedBlueData =
+{
+	&LEDBlue,
+	&LedDesc,
+	MITYPE_BYTE,
+	0
+};
+
+const menu_t LedMenu =
+{
+	String_Led,
+	&MiscsMenu,
+	LedMenuEnter+1,
+	0,
+	0,
+	0,
+	LedMenuEvent+1,
+	4,
+	{
+		{ String_Red, &LedRedData, 0, MACTION_DATA },
+		{ String_Green, &LedGreenData, 0, MACTION_DATA },
+		{ String_Blue, &LedBlueData, 0, MACTION_DATA },
+		{ String_Back, 0, EVENT_PARENT_MENU, 0 }
 	}
 };
 
@@ -1524,11 +1795,12 @@ const menu_t MiscsMenu =
 	0,
 	0,
 	0,
-	3,
+	4,
 	{
 		{ String_Game, &GameMenu, 0, MACTION_SUBMENU },
+		{ String_Led, &LedMenu, 0, MACTION_SUBMENU },
 		{ String_3D, &Object3DMenu, 0, MACTION_SUBMENU },
-		{ String_Exit, 0, EVENT_EXIT_MENUS, 0 }
+		{ String_Back, 0, EVENT_PARENT_MENU, 0 }
 	}
 };
 
@@ -1565,7 +1837,7 @@ const menu_t ClockMenu =
 		{ String_Fmt, 0, 0, 0 },
 		{ String_Size, &ClkSizeData, 0, MACTION_DATA },
 		{ String_Dial, 0, 0, 0 },
-		{ String_Exit, 0, EVENT_EXIT_MENUS, 0 }
+		{ String_Back, 0, EVENT_PARENT_MENU, 0 }
 	}
 };
 
@@ -1582,7 +1854,7 @@ const menu_t ScreenProtMenu =
 	{
 		{ String_Saver, 0, 0, 0 },
 		{ String_Main, 0, 0, 0 },
-		{ String_Exit, 0, EVENT_EXIT_MENUS, 0 }
+		{ String_Back, 0, EVENT_PARENT_MENU, 0 }
 	}
 };
 
@@ -1623,6 +1895,14 @@ const mdata_t BVO3Data =
 	0
 };
 
+const mdata_t BVO4Data =
+{
+	&dfBVOffset[3],
+	&BVODesc,
+	MITYPE_SBYTE,
+	0
+};
+
 const menu_t BVOMenu =
 {
 	String_BVO,
@@ -1632,12 +1912,13 @@ const menu_t BVOMenu =
 	0,
 	0,
 	0,
-	4,
+	5,
 	{
 		{ String_B1, &BVO1Data, 0, MACTION_DATA },
 		{ String_B2, &BVO2Data, 0, MACTION_DATA },
 		{ String_B3, &BVO3Data, 0, MACTION_DATA },
-		{ String_Exit, 0, EVENT_EXIT_MENUS, 0 }
+		{ String_B4, &BVO4Data, 0, MACTION_DATA },
+		{ String_Back, 0, EVENT_PARENT_MENU, 0 }
 	}
 };
 
@@ -1661,7 +1942,7 @@ const menu_t ExpertMenu =
 		{ String_UCH, 0, 0, 0 },
 		{ String_BAT, 0, 0, 0 },
 		{ String_BVO, &BVOMenu, 0, MACTION_SUBMENU },
-		{ String_Exit, 0, EVENT_EXIT_MENUS, 0 }
+		{ String_Back, 0, EVENT_PARENT_MENU, 0 }
 	}
 };
 
@@ -1674,14 +1955,15 @@ const menu_t ScreenSaveMenu =
 	ScreenSaveOnSelect+1,
 	0,
 	0,
-	6,
+	7,
 	{
 		{ String_None, 0, EVENT_EXIT_MENUS, 0 },
 		{ String_Clock, 0, EVENT_EXIT_MENUS, 0 },
 		{ String_3D, 0, EVENT_EXIT_MENUS, 0 },
 		{ String_Logo, 0, EVENT_EXIT_MENUS, 0 },
 		{ String_Qix, 0, EVENT_EXIT_MENUS, 0 },
-		{ String_Snow, 0, EVENT_EXIT_MENUS, 0 }
+		{ String_Snow, 0, EVENT_EXIT_MENUS, 0 },
+		{ String_Splash, 0, EVENT_EXIT_MENUS, 0 }
 	}
 };
 
@@ -1721,7 +2003,7 @@ const menu_t LogoMenu =
 	{
 		{ String_Show, &LogoShowData, 0, MACTION_DATA },
 		{ String_Where, &LogoWhereData, 0, MACTION_DATA },
-		{ String_Exit, 0, EVENT_EXIT_MENUS, 0 }
+		{ String_Back, 0, EVENT_PARENT_MENU, 0 }
 	}
 };
 
@@ -1750,7 +2032,7 @@ const menu_t ScreenMenu =
 		{ String_Logo, &LogoMenu, 0, MACTION_SUBMENU },
 		{ String_Invert, &ScreenInvData, EVENT_INVERT_SCREEN, MACTION_DATA },
 		{ String_Miscs, &MiscsMenu, 0, MACTION_SUBMENU },
-		{ String_Exit, 0, EVENT_EXIT_MENUS, 0 }
+		{ String_Back, 0, EVENT_PARENT_MENU, 0 }
 	}
 };
 
@@ -1768,7 +2050,7 @@ const menu_t ClicksMenu =
 		{ String_2, 0, 0, 0 },
 		{ String_3, 0, 0, 0 },
 		{ String_4, 0, 0, 0 },
-		{ String_Exit, 0, EVENT_EXIT_MENUS, 0 },
+		{ String_Back, 0, EVENT_PARENT_MENU, 0 }
 	}
 };
 
@@ -1781,9 +2063,8 @@ const menu_t IFMenu =
 	0,
 	IFMenuOnClick+1,
 	0,
-	9,
+	8,
 	{
-		{ String_BattPC, 0, 0, 0 },
 		{ String_1Watt, 0, 0, 0 },
 		{ String_1C5F, 0, 0, 0 },
 		{ String_WakeMP, 0, 0, 0 },
@@ -1791,9 +2072,171 @@ const menu_t IFMenu =
 		{ String_Temp, 0, 0, 0 },
 		{ String_PPwr, 0, 0, 0 },
 		{ String_Clicks, &ClicksMenu, 0, MACTION_SUBMENU },
-		{ String_Exit, 0, EVENT_EXIT_MENUS, 0 }
+		{ String_Back, 0, EVENT_PARENT_MENU, 0 }
 	}
 };
+
+
+const mvaluedesc_t BoostDesc =
+{
+	34, 53,
+	0, 0,
+	0, 100,
+	0,
+	0,
+	0xC2,
+	0x0B,
+	1,
+	101, 50
+};
+
+const mdata_t BoostData =
+{
+	&dfTCBoost,
+	&BoostDesc,
+	MITYPE_WORD,
+	0
+};
+
+const mvaluedesc_t PIDPDesc =
+{
+	24, 60,
+	0, 0,
+	PID_P_MIN, PID_P_MAX,
+	0,
+	0,
+	0,
+	0x0B,
+	1,
+	PID_P_MAX+1, PID_P_DEF
+};
+
+const mdata_t PIDPData =
+{
+	&dfPID.P,
+	&PIDPDesc,
+	MITYPE_WORD,
+	0
+};
+
+const mvaluedesc_t PIDIDesc =
+{
+	24, 60,
+	0, 0,
+	PID_I_MIN, PID_I_MAX,
+	0,
+	0,
+	0,
+	0x0B,
+	1,
+	PID_I_MAX+1, PID_I_DEF
+};
+
+const mdata_t PIDIData =
+{
+	&dfPID.I,
+	&PIDIDesc,
+	MITYPE_WORD,
+	0
+};
+
+const mvaluedesc_t PIDDDesc =
+{
+	24, 60,
+	0, 0,
+	PID_D_MIN, PID_D_MAX,
+	0,
+	0,
+	0,
+	0x0B,
+	1,
+	PID_D_MAX+1, PID_D_DEF
+};
+
+const mdata_t PIDDData =
+{
+	&dfPID.D,
+	&PIDDDesc,
+	MITYPE_WORD,
+	0
+};
+
+const menu_t AlgoMenu =
+{
+	String_Algo,
+	&VapingMenu,
+	0,
+	AlgoMenuIDraw+1,
+	0,
+	AlgoMenuOnClick+1,
+	0,
+	6,
+	{
+		{ String_Algo, 0, 0, 0 },
+		{ String_Boost, &BoostData, 0, MACTION_DATA },
+		{ String_P, &PIDPData, 0, MACTION_DATA },
+		{ String_I, &PIDIData, 0, MACTION_DATA },
+		{ String_D, &PIDDData, 0, MACTION_DATA },
+		{ String_Back, 0, EVENT_PARENT_MENU, 0 }
+	}
+};
+
+
+const mbitdesc_t CurveEnaDesc =
+{
+	40, 44,
+	String_Yes,
+	String_No
+};
+
+const mdata_t CurveEnaData =
+{
+	&dfStatus,
+	&CurveEnaDesc,
+	MITYPE_BIT,
+	28
+};
+
+const mvaluedesc_t CurveDelayDesc =
+{
+	36, 40,
+	3, 2,
+	0, 180,
+	&DrawPreheatDelay+1,
+	0,
+	0,
+	0x0B,
+	1,
+	-1, 0
+};
+
+const mdata_t CurveDelayData =
+{
+	&dfPHDelay,
+	&CurveDelayDesc,
+	MITYPE_BYTE,
+	0
+};
+
+const menu_t CurveMenu =
+{
+	String_Curve,
+	&VapingMenu,
+	0,
+	0,
+	0,
+	CurveMenuOnClick+1,
+	0,
+	5,
+	{
+		{ String_Enable, &CurveEnaData, 0, MACTION_DATA },
+		{ String_Reset, 0, EVENT_POWER_CURVE, 0 },
+		{ String_Edit, 0, EVENT_POWER_CURVE, 0 },
+		{ String_Delay, &CurveDelayData, 0, MACTION_DATA },
+		{ String_Back, 0, EVENT_PARENT_MENU, 0 }
+	}
+};
+
 
 const menu_t VapingMenu =
 {
@@ -1804,16 +2247,40 @@ const menu_t VapingMenu =
 	0,
 	VapingMenuOnClick+1,
 	VapingMenuOnEvent+1,
-	6,
+	8,
 	{
 		{ String_Preheat, &PreheatMenu, 0, MACTION_SUBMENU },
 		{ String_Modes, &ModesMenu, 0, MACTION_SUBMENU },
+		{ String_Algo, &AlgoMenu, 0, MACTION_SUBMENU },
+		{ String_Curve, &CurveMenu, 0, MACTION_SUBMENU },
 		{ String_Prot, 0, 0, 0 },
 		{ String_Vaped, 0, 0, 0 },
 		{ String_mlkJ, 0, 0, 0 },
+		{ String_Back, 0, EVENT_PARENT_MENU, 0 }
+	}
+};
+
+
+const menu_t ProfileMenu =
+{
+	String_Profile,
+	0,
+	0,
+	ProfileMenuIDraw+1,
+	0,
+	0,
+	ProfileMenuOnEvent+1,
+	6,
+	{
+		{ 0, 0, 0, 0 },
+		{ 0, 0, 0, 0 },
+		{ 0, 0, 0, 0 },
+		{ 0, 0, 0, 0 },
+		{ 0, 0, 0, 0 },
 		{ String_Exit, 0, EVENT_EXIT_MENUS, 0 }
 	}
 };
+
 
 const menu_t MainMenu =
 {
@@ -1866,11 +2333,24 @@ __myevic__ void DrawMenuData( int line, int sel, const mdata_t *data )
 			break;
 		}
 
+		case MITYPE_BYTE:
 		case MITYPE_WORD:
 		{
-			uint16_t v = *(const uint16_t*)p;
+			uint16_t v;
+
+			if ( data->type == MITYPE_BYTE )
+			{
+				v = *(const uint8_t*)p;
+			}
+			else
+			{
+				v = *(const uint16_t*)p;
+			}
+
 			const mvaluedesc_t *desc = data->desc;
+
 			DrawFillRect( desc->div, line, 63, line+12, 0 );
+
 			if ( desc->draw )
 			{
 				desc->draw( desc->posr, line, v, desc->dp, desc->z, desc-> nd );
@@ -1878,11 +2358,21 @@ __myevic__ void DrawMenuData( int line, int sel, const mdata_t *data )
 			else
 			{
 				DrawValueRight( desc->posr, line + 2, v, desc->dp, desc->z, desc-> nd );
+				if ( desc->unit_s )
+				{
+					DrawString( desc->unit_s, desc->posr + 1, line + 2 );
+				}
+				else if ( desc->unit_c )
+				{
+					DrawImage( desc->posr + 1, line + 2, desc->unit_c );
+				}
 			}
+
 			if ( sel && gFlags.edit_value )
 			{
 				InvertRect( 0, line, 63, line+12 );
 			}
+
 			break;
 		}
 	}
@@ -2208,6 +2698,12 @@ __myevic__ int MenuEvent( int event )
 		}
 	}
 
+	if ( ISEGRIPII )
+	{
+		if ( event == 2 ) event = 3;
+		else if ( event == 3 ) event = 2;
+	}
+
 	switch ( event )
 	{
 		case 1:
@@ -2287,9 +2783,7 @@ __myevic__ int MenuEvent( int event )
 		case 39:
 			CurrentMenu = &TCRSetMenu;
 			CurrentMenuItem = 0;
-			Screen = 102;
-			ScreenDuration = 30;
-			gFlags.refresh_display = 1;
+			SetScreen( 102, 30 );
 			vret = 1;
 			break;
 
@@ -2297,6 +2791,7 @@ __myevic__ int MenuEvent( int event )
 			EditModeTimer = 0;
 			gFlags.edit_capture_evt = 0;
 			gFlags.edit_value = 0;
+			LEDOff();
 			UpdateDataFlash();
 			MainView();
 			vret = 1;
@@ -2324,6 +2819,10 @@ __myevic__ int MenuEvent( int event )
 					CurrentMenu = &ClockMenu;
 					break;
 
+				case 107:
+					CurrentMenu = &CurveMenu;
+					break;
+
 				default:
 					CurrentMenu = 0;
 					break;
@@ -2333,9 +2832,7 @@ __myevic__ int MenuEvent( int event )
 			{
 				CurrentMenuItem = 0;
 				if ( CurrentMenu->on_enter ) CurrentMenu->on_enter();
-				Screen = 102;
-				ScreenDuration = 30;
-				gFlags.refresh_display = 1;
+				SetScreen( 102, 30 );
 			}
 			else
 			{
@@ -2343,9 +2840,26 @@ __myevic__ int MenuEvent( int event )
 			}
 
 			EditModeTimer = 0;
+			gFlags.edit_capture_evt = 0;
+			gFlags.edit_value = 0;
+			LEDOff();
 			vret = 1;
 			break;
 		}
+
+		case EVENT_TOGGLE_TDOM:
+			CurrentMenu = &PreheatMenu;
+			CurrentMenuItem = 1;
+			SetScreen( 102, 30 );
+			vret = 1;
+			break;
+
+		case EVENT_PROFILE_MENU:
+			CurrentMenu = &ProfileMenu;
+			CurrentMenuItem = dfProfile;
+			SetScreen( 102, 30 );
+			vret = 1;
+			break;
 
 		default:
 			break;
@@ -2353,3 +2867,5 @@ __myevic__ int MenuEvent( int event )
 
 	return vret;
 }
+
+
