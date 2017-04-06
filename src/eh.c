@@ -19,10 +19,6 @@ uint8_t	LastEvent;
 
 uint8_t	WattsInc;
 
-//-------------------------------------------------------------------------
-
-uint16_t	NewRez;
-uint8_t		NewMillis;
 
 //=========================================================================
 
@@ -112,17 +108,17 @@ __myevic__ void TempPlus()
 	if ( dfIsCelsius )
 	{
 		dfTemp += dfStatus.onedegree ? 1 : 5;
-		if ( dfTemp > 315 )
+		if ( dfTemp > 260 )
 		{
-			dfTemp = ( KeyTicks < 5 ) ? 100 : 315;
+			dfTemp = ( KeyTicks < 5 ) ? 150 : 260;
 		}
 	}
 	else
 	{
 		dfTemp += dfStatus.onedegree ? 5 : 10;
-		if ( dfTemp > 600 )
+		if ( dfTemp > 500 )
 		{
-			dfTemp = ( KeyTicks < 5 ) ? 200 : 600;
+			dfTemp = ( KeyTicks < 5 ) ? 300 : 500;
 		}
 	}
 }
@@ -135,17 +131,17 @@ __myevic__ void TempMinus()
 	if ( dfIsCelsius )
 	{
 		dfTemp -= dfStatus.onedegree ? 1 : 5;
-		if ( dfTemp < 100 )
+		if ( dfTemp < 150 )
 		{
-			dfTemp = ( KeyTicks < 5 ) ? 315 : 100;
+			dfTemp = ( KeyTicks < 5 ) ? 260 : 150;
 		}
 	}
 	else
 	{
 		dfTemp -= dfStatus.onedegree ? 5 : 10;
-		if ( dfTemp < 200 )
+		if ( dfTemp < 300 )
 		{
-			dfTemp = ( KeyTicks < 5 ) ? 600 : 200;
+			dfTemp = ( KeyTicks < 5 ) ? 500 : 300;
 		}
 	}
 }
@@ -165,7 +161,7 @@ __myevic__ void EventHandler()
 	if ( Event == 0 )
 		return;
 
-//	myprintf( "Event = %d\n", Event );
+	myprintf( "Event = %d\n", Event );
 
 	NoEventTimer = 200;
 	LastEvent = Event;
@@ -284,7 +280,6 @@ __myevic__ void EventHandler()
 			{
 				byte_200000B3 = 0;
 				NewRez = AtoRez;
-				NewMillis = AtoMillis;
 
 				uint8_t lock = 0;
 				if 		( dfMode == 0 ) lock = dfRezLockedNI;
@@ -295,25 +290,23 @@ __myevic__ void EventHandler()
 				if ( !lock || dfMode == 4 || dfMode == 5 || dfMode == 6 )
 				{
 					dfResistance = AtoRez;
-					RezMillis = AtoMillis;
 					UpdateDFTimer = 50;
 				}
 			}
 
 //------------------------------------------------------------------------------
 
-			if ( gFlags.new_rez_ni && dfMode == 0 )
+			if ( gFlags.check_rez_ni && dfMode == 0 )
 			{
-				gFlags.new_rez_ni = 0;
+				gFlags.check_rez_ni = 0;
 
 				if ( !dfRezNI )
 				{
 					dfRezNI = dfResistance;
-					dfMillis = ( dfMillis & ~0xf ) | RezMillis;
 				}
 				else
 				{
-					word_200000BA = dfRezNI * 10 + ( dfMillis & 0xf );
+					word_200000BA = dfRezNI;
 
 					if (  3 * dfRezNI >= NewRez )
 					{
@@ -321,7 +314,7 @@ __myevic__ void EventHandler()
 							&&	dfRezNI + 1 < NewRez
 							&&	!dfRezLockedNI )
 						{
-							gFlags.new_rez_ni = 1;
+							gFlags.check_rez_ni = 1;
 							Event = 32;
 							return;
 						}
@@ -336,43 +329,35 @@ __myevic__ void EventHandler()
 						)
 						{
 							dfResistance = dfRezNI;
-							RezMillis = dfMillis & 0xf;
 						}
 						else
 						{
 							if ( dfRezNI - dfRezNI / 20 > NewRez && dfRezNI - 1 > NewRez )
 							{
 								dfResistance = NewRez;
-								RezMillis = NewMillis;
-
 								dfRezNI = NewRez;
-								dfMillis = ( dfMillis & ~0xf ) | NewMillis;
 							}
 						}
 					}
 					else
 					{
 						dfResistance = NewRez;
-						RezMillis = NewMillis;
-
 						dfRezNI = NewRez;
-						dfMillis = ( dfMillis & ~0xf ) | NewMillis;
 					}
 				}
 			}
 
-			if ( gFlags.new_rez_ti && dfMode == 1 )
+			if ( gFlags.check_rez_ti && dfMode == 1 )
 			{
-				gFlags.new_rez_ti = 0;
+				gFlags.check_rez_ti = 0;
 
 				if ( !dfRezTI )
 				{
 					dfRezTI = dfResistance;
-					dfMillis = ( dfMillis & ~0xf0 ) | ( RezMillis << 4 );
 				}
 				else
 				{
-					word_200000B8 = dfRezTI * 10 + ( ( dfMillis >> 4 ) & 0xf );
+					word_200000B8 = dfRezTI;
 
 					if (  2 * dfRezTI >= NewRez )
 					{
@@ -380,7 +365,7 @@ __myevic__ void EventHandler()
 							&&	dfRezTI + 1 < NewRez
 							&&	!dfRezLockedTI )
 						{
-							gFlags.new_rez_ti = 1;
+							gFlags.check_rez_ti = 1;
 							Event = 32;
 							return;
 						}
@@ -395,43 +380,35 @@ __myevic__ void EventHandler()
 						)
 						{
 							dfResistance = dfRezTI;
-							RezMillis = ( dfMillis & 0xf0 ) >> 4;
 						}
 						else
 						{
 							if ( dfRezTI - dfRezTI / 20 > NewRez && dfRezTI - 1 > NewRez )
 							{
 								dfResistance = NewRez;
-								RezMillis = NewMillis;
-
 								dfRezTI = NewRez;
-								dfMillis = ( dfMillis & ~0xf0 ) | ( NewMillis << 4 );
 							}
 						}
 					}
 					else
 					{
 						dfResistance = NewRez;
-						RezMillis = NewMillis;
-
 						dfRezTI = NewRez;
-						dfMillis = ( dfMillis & ~0xf0 ) | ( NewMillis << 4 );
 					}
 				}
 			}
 
-			if ( gFlags.new_rez_ss && dfMode == 2 )
+			if ( gFlags.check_rez_ss && dfMode == 2 )
 			{
-				gFlags.new_rez_ss = 0;
+				gFlags.check_rez_ss = 0;
 
 				if ( !dfRezSS )
 				{
 					dfRezSS = dfResistance;
-					dfMillis = ( dfMillis & ~0xf00 ) | ( RezMillis << 8 );
 				}
 				else
 				{
-					word_200000BC = dfRezSS * 10 + ( ( dfMillis >> 8 ) & 0xf );
+					word_200000BC = dfRezSS;
 
 					if ( 3 * dfRezSS >= 2 * NewRez )
 					{
@@ -439,7 +416,7 @@ __myevic__ void EventHandler()
 							&&	dfRezSS + 1 < NewRez
 							&&	!dfRezLockedSS )
 						{
-							gFlags.new_rez_ss = 1;
+							gFlags.check_rez_ss = 1;
 							Event = 32;
 							return;
 						}
@@ -455,41 +432,33 @@ __myevic__ void EventHandler()
 							)
 							{
 								dfResistance = dfRezSS;
-								RezMillis = ( dfMillis & 0xf00 ) >> 8;
 							}
 							else if ( dfRezSS - dfRezSS / 20 > NewRez && dfRezSS - 1 > NewRez )
 							{
 								dfResistance = NewRez;
-								RezMillis = NewMillis;
-
 								dfRezSS = NewRez;
-								dfMillis = ( dfMillis & ~0xf00 ) | ( NewMillis << 8 );
 							}
 						}
 					}
 					else
 					{
 						dfResistance = NewRez;
-						RezMillis = NewMillis;
-
 						dfRezSS = NewRez;
-						dfMillis = ( dfMillis & ~0xf00 ) | ( NewMillis << 8 );
 					}
 				}
 			}
 
-			if ( gFlags.new_rez_tcr && dfMode == 3 )
+			if ( gFlags.check_rez_tcr && dfMode == 3 )
 			{
-				gFlags.new_rez_tcr = 0;
+				gFlags.check_rez_tcr = 0;
 
 				if ( !dfRezTCR )
 				{
 					dfRezTCR = dfResistance;
-					dfMillis = ( dfMillis & ~0xf000 ) | ( RezMillis << 12 );
 				}
 				else
 				{
-					word_200000BE = dfRezTCR * 10 + ( dfMillis >> 12 );
+					word_200000BE = dfRezTCR;
 
 					if ( 3 * dfRezTCR >= 2 * NewRez )
 					{
@@ -497,7 +466,7 @@ __myevic__ void EventHandler()
 							&&	dfRezTCR + 1 < NewRez
 							&&	!dfRezLockedTCR )
 						{
-							gFlags.new_rez_tcr = 1;
+							gFlags.check_rez_tcr = 1;
 							Event = 32;
 							return;
 						}
@@ -513,25 +482,18 @@ __myevic__ void EventHandler()
 							)
 							{
 								dfResistance = dfRezTCR;
-								RezMillis = ( dfMillis & 0xf000 ) >> 12;
 							}
 							else if ( dfRezTCR - dfRezTCR / 20 > NewRez && dfRezTCR - 1 > NewRez )
 							{
 								dfResistance = NewRez;
-								RezMillis = NewMillis;
-								
 								dfRezTCR = NewRez;
-								dfMillis = ( dfMillis & ~0xf000 ) | ( NewMillis << 12 );
 							}
 						}
 					}
 					else
 					{
 						dfResistance = NewRez;
-						RezMillis = NewMillis;
-
 						dfRezTCR = NewRez;
-						dfMillis = ( dfMillis & ~0xf000 ) | ( NewMillis << 12 );
 					}
 				}
 			}
@@ -545,24 +507,18 @@ __myevic__ void EventHandler()
 				GPIO_SetMode( PD, GPIO_PIN_PIN1_Msk, GPIO_MODE_OUTPUT );
 				PD1 = 0;
 			}
-			else if ( !ISCUBOID && ! ISCUBO200 && !ISRX200S && !ISRX23 && !ISRX300 )
+			else if ( !ISCUBOID && !ISRX200S && !ISRX23 )
 			{
 				GPIO_SetMode( PD, GPIO_PIN_PIN7_Msk, GPIO_MODE_OUTPUT );
 				PD7 = 0;
 			}
 
-			if ( ISEGRIPII || ISEVICAIO )
-			{
-				if ( !dfStealthOn )
-				{
-					LEDTimer = 0;
-					gFlags.led_on = 1;
-				}
-			}
-
 		//	myprintf( "StartFire\n" );
 
 			gFlags.firing = 1;
+			AutoPuffTimer=2000;
+			Event = EVENT_AUTO_PUFF;
+			gFlags.autopuff=1;
 			FireDuration = 0;
 
 			if ( BattProbeCount == 1 ) BattProbeCount = 2;
@@ -570,11 +526,11 @@ __myevic__ void EventHandler()
 			switch ( dfTempAlgo )
 			{
 				case 1:
-					GetTempCoef( TempCoefsNI );
+					GetTempCoef( dfTempCoefsNI );
 					break;
 
 				case 2:
-					GetTempCoef( TempCoefsTI );
+					GetTempCoef( dfTempCoefsTI );
 					break;
 
 				case 3:
@@ -610,10 +566,10 @@ __myevic__ void EventHandler()
 							tempf = dfTemp;
 							if ( dfIsCelsius == 1 ) tempf = CelsiusToF( dfTemp );
 
-							// 10W - 40W on full temp range
-							int p  = 100 + ( 3 * ( tempf - 200 ) / 4 );
+							int a  = ( 100 * ( tempf - 200 ) / 400 );
+							int b = 300 * a;
 
-							TargetVolts = GetAtoVWVolts( p );
+							TargetVolts = GetAtoVWVolts( b / 100 + 100 );
 						}
 						else
 						{
@@ -623,7 +579,7 @@ __myevic__ void EventHandler()
 					else
 					{
 						v21 = dfTCPower;
-						if ( v21 > 2 * MaxPower / 3 ) v21 = 2 * MaxPower / 3;
+						if ( v21 > 400 ) v21 = 400;
 						if ( v21 < 300 ) v21 = 300;
 
 						v22 = AtoPowerLimit( v21 );
@@ -647,10 +603,6 @@ __myevic__ void EventHandler()
 					return;
 				}
 			}
-			else
-			{
-				InitTCAlgo();
-			}
 
 			if ( dfMode == 6 )
 			{
@@ -663,16 +615,7 @@ __myevic__ void EventHandler()
 
 			if ( ISMODEVW(dfMode) )
 			{
-				if ( dfStatus.pcurve )
-				{
-					pwr = dfPwrCurve[0].power * pwr / 100;
-
-					if ( pwr > AtoMaxPower )
-					{
-						pwr = AtoMaxPower;
-					}
-				}
-				else if ( !PreheatDelay && dfPreheatTime )
+				if ( dfPreheatTime )
 				{
 					PreheatTimer = dfPreheatTime;
 
@@ -691,19 +634,25 @@ __myevic__ void EventHandler()
 					}
 
 					pwr = PreheatPower;
-				}
 
-				if ( pwr > 300 ) pwr = 300;
+					TargetVolts = GetVoltsForPower( PreheatPower );
+				}
+				else if ( pwr <= 300 )
+				{
+					TargetVolts = dfVWVolts;
+				}
+				else
+				{
+					TargetVolts = GetVoltsForPower( 300 );
+				}
 
 				gFlags.limit_power = 0;
 				if ( pwr > BatteryMaxPwr )
 				{
 					gFlags.limit_power = 1;
 					PowerScale = 100 * BatteryMaxPwr / pwr;
-					pwr = BatteryMaxPwr;
+					TargetVolts = GetVoltsForPower( BatteryMaxPwr );
 				}
-
-				TargetVolts = GetVoltsForPower( pwr );
 
 				LowBatVolts = ( BatteryVoltage > BatteryCutOff + 100 ) ? 0 : BatteryVoltage;
 			}
@@ -715,7 +664,7 @@ __myevic__ void EventHandler()
 
 			SetADCState( 1, 1 );
 			SetADCState( 2, 1 );
-			if ( ISCUBO200 || ISRX200S || ISRX23 || ISRX300 )
+			if ( ISRX200S || ISRX23 )
 			{
 				SetADCState( 15, 1 );
 			}
@@ -853,14 +802,12 @@ __myevic__ void EventHandler()
 				{
 					dfStatus.off = 0;
 					MainView();
-					SplashTimer = 3;
 				}
 			}
 			else
 			{
 				dfStatus.off = 1;
 				gFlags.refresh_display = 1;
-				LEDOff();
 				if ( gFlags.battery_charging )
 				{
 					ChargeView();
@@ -947,9 +894,7 @@ __myevic__ void EventHandler()
 				PF2 = 0;
 				PA2 = 0;
 			}
-			ChargeMode = 0;
-			ChargeStep = 0;
-			ChargeStatus = 0;
+			byte_20000056 = 0;
 			if ( BatteryStatus == 3 || BatteryStatus == 4 )
 			{
 				BatteryStatus = 0;
@@ -976,17 +921,8 @@ __myevic__ void EventHandler()
 			return;
 
 		case 10:	// USB cable attach
-			ChargeMode = 0;
-			ChargeStep = 0;
-			ChargeStatus = 1;
-			if ( NumBatteries > 1 )
-			{
-				USBMaxLoad = 2;
-			}
-			else
-			{
-				USBMaxLoad = 1;
-			}
+			byte_20000056 = 1;
+			byte_20000055 = 1;
 			gFlags.low_battery = 0;
 			gFlags.usb_attached = 1;
 			if ( !dfStatus.off )
@@ -1052,23 +988,19 @@ __myevic__ void EventHandler()
 				{
 					case 0:
 						dfResistance = dfRezNI;
-						RezMillis = dfMillis & 0xf;
-						gFlags.new_rez_ni = 0;
+						gFlags.check_rez_ni = 0;
 						break;
 					case 1:
 						dfResistance = dfRezTI;
-						RezMillis = ( dfMillis & 0xf0 ) >> 4;
-						gFlags.new_rez_ti = 0;
+						gFlags.check_rez_ti = 0;
 						break;
 					case 2:
 						dfResistance = dfRezSS;
-						RezMillis = ( dfMillis & 0xf00 ) >> 8;
-						gFlags.new_rez_ss = 0;
+						gFlags.check_rez_ss = 0;
 						break;
 					case 3:
 						dfResistance = dfRezTCR;
-						RezMillis = ( dfMillis & 0xf000 ) >> 12;
-						gFlags.new_rez_tcr = 0;
+						gFlags.check_rez_tcr = 0;
 						break;
 					default:
 						break;
@@ -1077,7 +1009,7 @@ __myevic__ void EventHandler()
 			}
 			else if ( Screen == 1 )
 			{
-				KeyUpTimer = 10;
+				KeyUpTimer = 5;
 
 				if ( EditModeTimer )
 				{
@@ -1091,14 +1023,7 @@ __myevic__ void EventHandler()
 					{
 						if ( dfMode == 6 )
 						{
-							if ( EditItemIndex == 0 )
-							{
-								EditItemIndex = 5;
-							}
-							else
-							{
-								EditItemIndex = 0;
-							}
+							EditItemIndex = 0;
 						}
 						else
 						{
@@ -1108,14 +1033,13 @@ __myevic__ void EventHandler()
 							}
 							else
 							{
-								if ( ++EditItemIndex > 5 )
-									EditItemIndex = 0;
+								EditItemIndex = 0;
 							}
 						}
 					}
 					else
 					{
-						if ( ++EditItemIndex > 5 )
+						if ( ++EditItemIndex > 4 )
 							EditItemIndex = 0;
 					}
 				}
@@ -1157,7 +1081,10 @@ __myevic__ void EventHandler()
 	            }
 	            UpdateDFTimer = 50;
 			}
-
+			if ( gFlags.firing )
+			{
+				StopFire();
+			}
 			break;
 		}
 
@@ -1189,23 +1116,19 @@ __myevic__ void EventHandler()
 				{
 					case 0:
 						dfRezNI = NewRez;
-						dfMillis = ( dfMillis & ~0xf ) | NewMillis;
-						gFlags.new_rez_ni = 0;
+						gFlags.check_rez_ni = 0;
 						break;
 					case 1:
 						dfRezTI = NewRez;
-						dfMillis = ( dfMillis & ~0xf0 ) | ( NewMillis << 4 );
-						gFlags.new_rez_ti = 0;
+						gFlags.check_rez_ti = 0;
 						break;
 					case 2:
 						dfRezSS = NewRez;
-						dfMillis = ( dfMillis & ~0xf00 ) | ( NewMillis << 8 );
-						gFlags.new_rez_ss = 0;
+						gFlags.check_rez_ss = 0;
 						break;
 					case 3:
 						dfRezTCR = NewRez;
-						dfMillis = ( dfMillis & ~0xf000 ) | ( NewMillis << 12 );
-						gFlags.new_rez_tcr = 0;
+						gFlags.check_rez_tcr = 0;
 						break;
 					default:
 						break;
@@ -1214,12 +1137,11 @@ __myevic__ void EventHandler()
 			}
 			else if ( Screen == 1 )
 			{
-				KeyUpTimer = 10;
+				KeyUpTimer = 5;
 
 				if ( EditModeTimer )
 				{
 					EditModeTimer = 1000;
-					gFlags.draw_edited_item = 1;
 
 					switch ( EditItemIndex )
 					{
@@ -1254,23 +1176,6 @@ __myevic__ void EventHandler()
 
 						case 4:
 							if ( ++dfAPT > 8 ) dfAPT = 0;
-							break;
-
-						case 5:
-							if ( !dfStatus.battpc )
-							{
-								dfStatus.battpc = 1;
-								dfStatus.battv = 0;
-							}
-							else if ( !dfStatus.battv )
-							{
-								dfStatus.battv = 1;
-							}
-							else
-							{
-								dfStatus.battv = 0;
-								dfStatus.battpc = 0;
-							}
 							break;
 					}
 
@@ -1323,7 +1228,10 @@ __myevic__ void EventHandler()
 	            }
 	            UpdateDFTimer = 50;
 			}
-
+			if ( gFlags.firing )
+			{
+				StopFire();
+			}
 			break;
 		}
 	}

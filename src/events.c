@@ -27,80 +27,13 @@ uint16_t	KeyPressTime;
 
 //-------------------------------------------------------------------------
 
+
 //=========================================================================
-// Power Curve Editing
-//-------------------------------------------------------------------------
-
-__myevic__ int PCGetPoint()
-{
-	int t = EditItemIndex * 5;
-	int i;
-
-	for ( i = 0 ; i < PWR_CURVE_PTS ; ++i )
-		if ( dfPwrCurve[i].time == t )
-			return i;
-
-	return -1;
-}
-
-__myevic__ void PCRemovePoint( int i )
-{
-	if ( i > 0 )
-	{
-		for ( ; i < PWR_CURVE_PTS ; ++i )
-		{
-			dfPwrCurve[i].time  = dfPwrCurve[i+1].time;
-			dfPwrCurve[i].power = dfPwrCurve[i+1].power;
-		}
-		--i;
-		dfPwrCurve[i].time = 0;
-		dfPwrCurve[i].power = 100;
-	}
-}
-
-__myevic__ int PCAddPoint()
-{
-	int i;
-
-	int t = EditItemIndex * 5;
-
-	if ( t == 0 )
-		return 0;
-
-	for ( i = 1 ; i < PWR_CURVE_PTS ; ++i )
-		if ( ( dfPwrCurve[i].time == 0 ) || ( dfPwrCurve[i].time > t ) )
-			break;
-
-	if ( dfPwrCurve[i-1].time == t )
-		return ( i - 1 );
-
-	if ( dfPwrCurve[PWR_CURVE_PTS - 1].time > 0 )
-		return -1;
-
-	for ( int j = PWR_CURVE_PTS - 1 ; j > i ; --j )
-	{
-		dfPwrCurve[j].time  = dfPwrCurve[j-1].time;
-		dfPwrCurve[j].power = dfPwrCurve[j-1].power;
-	}
-
-	dfPwrCurve[i].time  = t;
-	dfPwrCurve[i].power = dfPwrCurve[i-1].power;
-
-	return i;
-}
-
-__myevic__ void PCCompact()
-{
-	for ( int i = PWR_CURVE_PTS - 1 ; i > 0 ; --i )
-		if ( dfPwrCurve[i].time )
-			if ( dfPwrCurve[i].power == dfPwrCurve[i-1].power )
-				PCRemovePoint( i );
-}
 
 
 //=========================================================================
 //----- (00003738) --------------------------------------------------------
-// Called at 10Hz untill KeyTicks >= 5 (1.4s), then at 100Hz.
+// Called at 5Hz untill KeyTicks >= 5 (1.4s), then at 100Hz.
 
 __myevic__ void KeyRepeat()
 {
@@ -135,7 +68,7 @@ __myevic__ void KeyRepeat()
 				MainView();
 		}
 		KeyTicks = 0;
-		KRDelay = 6;
+		KRDelay = 3;
 	}
 	else if ( !KRDelay || !--KRDelay )
 	{
@@ -147,10 +80,10 @@ __myevic__ void KeyRepeat()
 		// First event has been emitted by GetUserInput()
 
 		// +0.60s
-		// Polled every 100ms...
+		// Polled every 200ms...
 		if ( KeyTicks < 5 )
 		{
-			KRDelay = 2;
+			KRDelay = 0;
 		}
 		// then every 10ms.
 		// +0.40s (1.00s)
@@ -158,7 +91,7 @@ __myevic__ void KeyRepeat()
 		{
 			// Quadratic function having its minimum (1) at 104
 			KRDelay = 104 - KeyTicks;
-			KRDelay = ( KRDelay * KRDelay ) / 545 + 1;
+			KRDelay = ( KRDelay * KRDelay ) / 1089 + 1;
 		}
 		// +3.60s (4.60s)
 		else if ( KeyTicks < 205 )
@@ -166,7 +99,7 @@ __myevic__ void KeyRepeat()
 			// Step jumped from 1 to 10, ie. speed x10
 			// Recover this jump then smooth with same function as above
 			KRDelay = 204 - KeyTicks;
-			KRDelay = ( KRDelay * KRDelay ) / 545 + 1;
+			KRDelay = ( KRDelay * KRDelay ) / 1089 + 1;
 		}
 
 		if ( !PD2 )
@@ -190,7 +123,7 @@ __myevic__ void GetUserInput()
 
 	if ( ( !PE0 || AutoPuffTimer ) && PD2 && PD3 )
 	{
-		if ( !PE0 ) AutoPuffTimer = 0;
+		if ( !PE0 && !gFlags.autopuff ) AutoPuffTimer = 0;
 
 		if (( LastInputs == 5 ) || ( LastInputs == 6 ))
 			return;
@@ -203,7 +136,11 @@ __myevic__ void GetUserInput()
 		{
 			if ( LastInputs == 1 )
 			{
-				StopFire();
+				if (!gFlags.autopuff)
+				{
+					AutoPuffTimer = 0;
+					//StopFire();
+				}
 			}
 			gFlags.user_idle = 1;
 			LastInputs = -1;
@@ -233,7 +170,7 @@ __myevic__ void GetUserInput()
 			{
 				UserInputs = 10;
 				BattProbeCount = 0;
-
+				
 				if ( dfStatus.off && FireClickCount == 1 )
 				{
 					FireClickCount = 0;
@@ -269,7 +206,7 @@ __myevic__ void GetUserInput()
 					}
 				}
 			}
-			else if ( !ISCUBOID && !ISCUBO200 && !ISRX200S && !ISRX23 && !ISRX300 )
+			else if ( !ISCUBOID && !ISRX200S && !ISRX23 )
 			{
 				if ( !PD7 && !gFlags.battery_charging )
 				{
@@ -303,12 +240,6 @@ __myevic__ void GetUserInput()
 		LastInputs = UserInputs;
 		KeyPressTime = 0;
 		gFlags.user_idle = 0;
-
-		if ( UserInputs < 10 )
-		{
-			SplashTimer = 0;
-		}
-
 		return;
 	}
 
@@ -389,17 +320,6 @@ __myevic__ void GetUserInput()
 						case CLICK_ACTION_ON_OFF:
 							FireClicksEvent = 17;	// Switch On/Off
 							break;
-
-						case CLICK_ACTION_PROFILE:
-							FireClicksEvent = EVENT_NEXT_PROFILE;	// Cycle profile
-							break;
-					}
-					if ( dfStatus.off )
-					{
-						if ( FireClicksEvent != 17 )
-						{
-							FireClicksEvent = 0;
-						}
 					}
 					break;
 
@@ -466,9 +386,11 @@ __myevic__ void GetUserInput()
 		{
 			FireClicksEvent = 0;
 		}
-		else if ( UserInputs == 4 )
+	}
+	else if ( KeyPressTime == 50 )
+	{
+		if ( UserInputs == 4 )
 		{
-			// Left + Right button
 			if ( IsMenuScreen() )
 			{
 				Event = EVENT_PARENT_MENU;
@@ -476,24 +398,9 @@ __myevic__ void GetUserInput()
 		}
 		else if ( UserInputs == 5 )
 		{
-			// Fire + Right button
 			if ( IsMenuScreen() )
 			{
 				Event = EVENT_EXIT_MENUS;
-			}
-			else if ( !dfStatus.off )
-			{
-				if ( !gFlags.playing_fb )
-				{
-					Event = EVENT_ENTER_MENUS;
-				}
-				else
-				{
-					gFlags.playing_fb = 0;
-					Event = 0;
-					fbInitTimeouts();
-					MainView();
-				}
 			}
 		}
 	}
@@ -522,25 +429,43 @@ __myevic__ void GetUserInput()
 			if ( !EditModeTimer )
 			{
 				if ( dfStatus.off )
-				{
 					Event = 18;	// flip display
-				}
 				else
-				{
 					Event = 4;	// key (un)lock
-				}
 			}
 		}
 		else if ( UserInputs == 5 )
 		{
-			// Fire + Right button
+			if ( !dfStatus.off )
+			{
+				if ( !gFlags.playing_fb )
+				{
+					Event = EVENT_ENTER_MENUS;
+				}
+				else
+				{
+					gFlags.playing_fb = 0;
+					Event = 0;
+					fbInitTimeouts();
+					MainView();
+				}
+			}
+		}
+		else if ( UserInputs == 6 )
+		{
+			if ( !dfStatus.off )
+			{
+				Event = 6;	// stealth on/off
+			}
+		}
+	}
+	else if ( KeyPressTime == 250 )
+	{
+		if ( UserInputs == 5 )
+		{
 			if ( dfStatus.off )
 			{
 				Event = 39;	// tcr set menu
-			}
-			else
-			{
-				Event = EVENT_PROFILE_MENU;	// profile selection
 			}
 		}
 		else if ( UserInputs == 6 )
@@ -549,17 +474,6 @@ __myevic__ void GetUserInput()
 			{
 				Event = 34;	// battery voltage screen
 			}
-			else
-			{
-				Event = 6;	// stealth on/off
-			}
-		}
-	}
-	else if ( KeyPressTime == 500 )
-	{
-		if ( UserInputs == 5 )
-		{
-			Event = EVENT_POWER_CURVE;
 		}
 	}
 	else if ( ( KeyPressTime & 0x8000 ) || ( KeyPressTime & 0x7fff ) > 200 )
@@ -597,7 +511,7 @@ __myevic__ int EvtFire()
 		case 101:
 		{
 			UpdateDataFlash();
-			Event = EVENT_PARENT_MENU;
+			MainView();
 			vret = 1;
 		}
 		break;
@@ -632,24 +546,6 @@ __myevic__ int EvtFire()
 			vret = 1;
 		}
 		break;
-		
-		case 107:
-		{
-			EditModeTimer = 3000;
-			if ( gFlags.edit_value )
-			{
-				gFlags.edit_value = 0;
-				PCCompact();
-			}
-			else
-			{
-				if (( PCGetPoint() >= 0 ) || ( PCAddPoint() >= 0 ))
-				{
-					gFlags.edit_value = 1;
-				}
-			}
-			vret = 1;
-		}
 	}
 
 	return vret;
@@ -675,7 +571,6 @@ __myevic__ int EvtSingleFire()
 		case 104:
 		case 105:
 		case 106:
-		case 107:
 		{
 			vret = 1;
 		}
@@ -707,7 +602,7 @@ __myevic__ int EvtPlusButton()
 				{
 					if ( dfMode < 3 )
 					{
-						KeyUpTimer = 10;
+						KeyUpTimer = 5;
 						EditModeTimer = 1000;
 
 						do
@@ -814,27 +709,19 @@ __myevic__ int EvtPlusButton()
 
 		case 106:
 		{
-			int f = dfStatus.dfmt1 | ( dfStatus.dfmt2 << 1 );
-			switch ( ( f << 2 | EditItemIndex ) )
+			if (( EditItemIndex == 2 && dfStatus.mdy )
+				||( EditItemIndex == 1 && !dfStatus.mdy ))
 			{
-				case  0:
-				case  4:
-				case  8:
-				case 14:
-					if ( SetTimeRTD.u32Year < RTC_YEAR2000 + 1000 ) ++SetTimeRTD.u32Year;
-					break;
-				case  1:
-				case  6:
-				case  9:
-				case 13:
-					SetTimeRTD.u32Month = SetTimeRTD.u32Month %12 + 1;
-					break;
-				case  2:
-				case  5:
-				case 10:
-				case 12:
-					SetTimeRTD.u32Day = SetTimeRTD.u32Day %31 + 1;
-					break;
+				SetTimeRTD.u32Month = SetTimeRTD.u32Month %12 + 1;
+			}
+			else if (( EditItemIndex == 1 && dfStatus.mdy )
+					|| ( EditItemIndex == 2 && !dfStatus.mdy ))
+			{
+				SetTimeRTD.u32Day = SetTimeRTD.u32Day %31 + 1;
+			}
+			else if ( EditItemIndex == 0 )
+			{
+				if ( SetTimeRTD.u32Year < RTC_YEAR2000 + 1000 ) ++SetTimeRTD.u32Year;
 			}
 			gFlags.draw_edited_item = 1;
 			gFlags.refresh_display = 1;
@@ -843,29 +730,6 @@ __myevic__ int EvtPlusButton()
 			vret = 1;
 		}
 		break;
-
-		case 107:
-		{
-			if ( gFlags.edit_value )
-			{
-				int i = PCGetPoint();
-
-				if ( ++dfPwrCurve[i].power > 200 )
-				{
-					if ( KeyTicks < 5 ) dfPwrCurve[i].power = 0;
-					else dfPwrCurve[i].power = 200;
-				}
-			}
-			else
-			{
-				++EditItemIndex;
-				EditItemIndex %= 50;
-			}
-			EditModeTimer = 3000;
-			gFlags.refresh_display = 1;
-			vret = 1;
-			break;
-		}
 	}
 
 	return vret;
@@ -963,27 +827,19 @@ __myevic__ int EvtMinusButton()
 
 		case 106:
 		{
-			int f = dfStatus.dfmt1 | ( dfStatus.dfmt2 << 1 );
-			switch ( ( f << 2 | EditItemIndex ) )
+			if (( EditItemIndex == 2 && dfStatus.mdy )
+				||( EditItemIndex == 1 && !dfStatus.mdy ))
 			{
-				case  0:
-				case  4:
-				case  8:
-				case 14:
-					if ( SetTimeRTD.u32Year > RTC_YEAR2000 ) --SetTimeRTD.u32Year;
-					break;
-				case  1:
-				case  6:
-				case  9:
-				case 13:
-					SetTimeRTD.u32Month = ( SetTimeRTD.u32Month + 10 ) % 12 + 1;
-					break;
-				case  2:
-				case  5:
-				case 10:
-				case 12:
-					SetTimeRTD.u32Day = ( SetTimeRTD.u32Day + 29 ) % 31 + 1;
-					break;
+				SetTimeRTD.u32Month = ( SetTimeRTD.u32Month + 11 ) %12;
+			}
+			else if (( EditItemIndex == 1 && dfStatus.mdy )
+					|| ( EditItemIndex == 2 && !dfStatus.mdy ))
+			{
+				SetTimeRTD.u32Day = ( SetTimeRTD.u32Day + 30 ) %31;
+			}
+			else if ( EditItemIndex == 0 )
+			{
+				if ( SetTimeRTD.u32Year > RTC_YEAR2000 ) --SetTimeRTD.u32Year;
 			}
 			gFlags.draw_edited_item = 1;
 			gFlags.refresh_display = 1;
@@ -992,28 +848,6 @@ __myevic__ int EvtMinusButton()
 			vret = 1;
 		}
 		break;
-
-		case 107:
-		{
-			if ( gFlags.edit_value )
-			{
-				int i = PCGetPoint();
-
-				if ( !dfPwrCurve[i].power-- )
-				{
-					if ( KeyTicks < 5 ) dfPwrCurve[i].power = 200;
-					else dfPwrCurve[i].power = 0;
-				}
-			}
-			else
-			{
-				if ( !EditItemIndex-- ) EditItemIndex = 49;
-			}
-			EditModeTimer = 3000;
-			gFlags.refresh_display = 1;
-			vret = 1;
-			break;
-		}
 	}
 
 	return vret;
@@ -1056,7 +890,7 @@ __myevic__ int EvtLongFire()
 		case 102:
 			vret = MenuEvent( LastEvent );
 			break;
-
+		
 		case 106:
 		{
 			S_RTC_TIME_DATA_T rtd;
@@ -1074,16 +908,6 @@ __myevic__ int EvtLongFire()
 			MainView();
 			vret = 1;
 			break;
-
-		case 107:
-		{
-			int i = PCGetPoint();
-			if ( i > 0 )
-				PCRemovePoint( i );
-			gFlags.edit_value = 0;
-			gFlags.refresh_display = 1;
-			vret = 1;
-		}
 	}
 
 	return vret;
@@ -1093,7 +917,9 @@ __myevic__ int EvtLongFire()
 
 __myevic__ int EvtContrastMenu()
 {
-	SetScreen( 101, 10 );
+	Screen = 101;
+	ScreenDuration = 10;
+	gFlags.refresh_display = 1;
 	return 1;
 }
 
@@ -1103,7 +929,9 @@ __myevic__ int EvtEnterMenus()
 {
 	CurrentMenu = 0;
 	CurrentMenuItem = 0;
-	SetScreen( 102, 30 );
+	Screen = 102;
+	ScreenDuration = 30;
+	gFlags.refresh_display = 1;
 	return 1;
 }
 
@@ -1114,7 +942,9 @@ S_RTC_TIME_DATA_T SetTimeRTD;
 __myevic__ int EvtSetTime()
 {
 	GetRTC( &SetTimeRTD );
-	SetScreen( 105, 60 );
+	Screen = 105;
+	ScreenDuration = 60;
+	gFlags.refresh_display = 1;
 	EditItemIndex = 2;
 	EditModeTimer = 6000;
 	return 1;
@@ -1123,7 +953,9 @@ __myevic__ int EvtSetTime()
 __myevic__ int EvtSetDate()
 {
 	GetRTC( &SetTimeRTD );
-	SetScreen( 106, 60 );
+	Screen = 106;
+	ScreenDuration = 60;
+	gFlags.refresh_display = 1;
 	EditItemIndex = 2;
 	EditModeTimer = 6000;
 	return 1;
@@ -1135,7 +967,7 @@ __myevic__ int CustomEvents()
 {
 	int vret;
 
-	vret = 1;
+	vret = 0;
 
 	switch ( LastEvent )
 	{
@@ -1198,19 +1030,14 @@ __myevic__ int CustomEvents()
 		case EVENT_NEXT_MODE:
 			NextMode();
 			gFlags.refresh_display = 1;
+			vret = 1;
 			break;
 
 		case EVENT_TOGGLE_TDOM:
-			if ( ISMODETC(dfMode) )
-			{
-				dfStatus.priopwr ^= 1;
-				UpdateDFTimer = 50;
-				gFlags.refresh_display = 1;
-			}
-			else if ( ISMODEVW(dfMode) )
-			{
-				MenuEvent( LastEvent );
-			}
+			dfStatus.priopwr ^= 1;
+			UpdateDFTimer = 50;
+			gFlags.refresh_display = 1;
+			vret = 1;
 			break;
 
 		case EVENT_RESET_VVEL:
@@ -1220,9 +1047,9 @@ __myevic__ int CustomEvents()
 			t = t - ( t% 86400 );
 			MilliJoules = 0;
 			RTCWriteRegister( RTCSPARE_VV_BASE, t );
-			EditModeTimer = 1000;
+			EditModeTimer = 0;
 			gFlags.refresh_display = 1;
-			gFlags.draw_edited_item = 1;
+			vret = 1;
 			break;
 		}
 
@@ -1230,51 +1057,42 @@ __myevic__ int CustomEvents()
 			dfStatus.storage = 0;
 			dfStatus.vcom = 1;
 			InitUSB();
+			vret = 1;
 			break;
 
 		case EVENT_AUTO_PUFF:
-			if ( AutoPuffTimer > 0 )
-				MainView();
-			else
+			if (!AutoPuffTimer)
 				StopFire();
+			//vret = 1;
 			break;
 
 		case EVENT_CLK_ADJUST:
-			SetScreen( 104, 120 );
+			Screen = 104;
+			ScreenDuration = 120;
+			gFlags.refresh_display = 1;
+			vret = 1;
 			break;
 
 		case EVENT_CLK_SPEED:
-			SetScreen( 103, 120 );
+			Screen = 103;
+			ScreenDuration = 120;
+			gFlags.refresh_display = 1;
+			vret = 1;
 			break;
 
 		case EVENT_INVERT_SCREEN:
 			DisplaySetInverse( dfStatus.invert );
+			vret = 1;
 			break;
 
 		case EVENT_MODE_CHANGE:
 			ModeChange();
-			break;
-
-		case EVENT_PROFILE_MENU:
-			vret = MenuEvent( LastEvent );
-			break;
-
-		case EVENT_NEXT_PROFILE:
-			LoadProfile( ( dfProfile + 1 ) % DATAFLASH_PROFILES_MAX );
-			ShowProfNum = 30;
-			break;
-
-		case EVENT_POWER_CURVE:
-			SetScreen( 107, 30 );
-			EditModeTimer = 3000;
-			EditItemIndex = 0;
+			vret = 1;
 			break;
 
 		default:
-			vret = 0;
 			break;
 	}
-
 	return vret;
 }
 
