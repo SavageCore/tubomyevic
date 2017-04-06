@@ -202,6 +202,7 @@ __myevic__ void GetUserInput()
 		if ( gFlags.firing )
 		{
 			if ( LastInputs == 1 )
+				StopFire();
 			{
 				if (!gFlags.autopuff)
 					{
