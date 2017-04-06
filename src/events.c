@@ -190,7 +190,7 @@ __myevic__ void GetUserInput()
 
 	if ( ( !PE0 || AutoPuffTimer ) && PD2 && PD3 )
 	{
-		if ( !PE0 ) AutoPuffTimer = 0;
+		if ( !PE0 && !gFlags.autopuff) AutoPuffTimer = 0;
 
 		if (( LastInputs == 5 ) || ( LastInputs == 6 ))
 			return;
@@ -203,7 +203,12 @@ __myevic__ void GetUserInput()
 		{
 			if ( LastInputs == 1 )
 			{
-				StopFire();
+				if (!gFlags.autopuff)
+					{
+						AutoPuffTimer = 0;
+						gFlags.autopuff = 0;
+						//StopFire();
+					}
 			}
 			gFlags.user_idle = 1;
 			LastInputs = -1;
