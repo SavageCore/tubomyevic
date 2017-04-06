@@ -567,7 +567,7 @@ __myevic__ void EventHandler()
 
 			AutoPuffTimer=2000;
 			Event = EVENT_AUTO_PUFF;
-			//gFlags.autopuff=1;
+			gFlags.autopuff=1;
 
 			if ( BattProbeCount == 1 ) BattProbeCount = 2;
 
