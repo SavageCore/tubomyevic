@@ -199,16 +199,26 @@ __myevic__ void GetUserInput()
 	}
 	else
 	{
-		if ( gFlags.firing )
-		{
-			if ( LastInputs == 1 )
-				StopFire();
+
+		if (gFlags.autopuff)
 			{
-				if (!gFlags.autopuff)
+				if ( LastInputs == 1 )
 					{
 						AutoPuffTimer = 0;
 						gFlags.autopuff = 0;
-						//StopFire();
+						StopFire();
+					}
+			}
+		if ( gFlags.firing )
+		{
+			if ( LastInputs == 1 )
+			{
+				StopFire();
+				if (gFlags.autopuff)
+					{
+						AutoPuffTimer = 0;
+						gFlags.autopuff = 0;
+						StopFire();
 					}
 			}
 			gFlags.user_idle = 1;
@@ -364,10 +374,13 @@ __myevic__ void GetUserInput()
 					break;
 
 				case 2:
-					AutoPuffTimer=2000;
+					AutoPuffTimer=6000;
  					Event = EVENT_AUTO_PUFF;
 					gFlags.autopuff=1;
-					break;
+					if ( Screen != 1 || !EditModeTimer || EditItemIndex != 4 )
+					{
+						Event = 1;	// fire
+					}
 				case 3:
 				case 4:
 					switch ( dfClick[FireClickCount-2] )
