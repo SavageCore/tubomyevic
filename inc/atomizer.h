@@ -19,7 +19,7 @@
 #define VVEL_MAX_RATIO	1000
 
 #define FIRE_PROTEC_MIN  20
-#define FIRE_PROTEC_DEF 100
+#define FIRE_PROTEC_DEF 250
 #define FIRE_PROTEC_MAX 250
 
 enum
@@ -31,17 +31,17 @@ enum
 	TCALGO_MAX
 };
 
-#define TCALGO_DEF TCALGO_JOY
+#define TCALGO_DEF TCALGO_PID
 
-#define PID_P_DEF	600
+#define PID_P_DEF	4000
 #define PID_P_MIN	1
 #define PID_P_MAX	6000
 
-#define PID_I_DEF	850
+#define PID_I_DEF	650
 #define PID_I_MIN	0
 #define PID_I_MAX	10000
 
-#define PID_D_DEF	0
+#define PID_D_DEF	10
 #define PID_D_MIN	0
 #define PID_D_MAX	5000
 

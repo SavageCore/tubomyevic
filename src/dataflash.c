@@ -411,15 +411,15 @@ __myevic__ void ResetDataFlash()
 	// since we start by clearing the memory.
 
 	dfMagic = DFMagicNumber;
-	dfMode = 4;
+	dfMode = 3;
 	dfProtec = FIRE_PROTEC_DEF;
 	dfVWVolts = 330;
 	dfPower = 200;
-	dfTCPower = 200;
+	dfTCPower = 700;
 	dfIsCelsius = 1;
 	dfRezType = 1;
 	dfTempAlgo = 1;
-	dfTemp = 210;
+	dfTemp = 195;
 //	dfResistance = 0;
 	dfUIVersion = 2;
 //	dfAPT = 0;
@@ -443,12 +443,12 @@ __myevic__ void ResetDataFlash()
 //	dfStatus.storage = 0;
 //	dfStatus.dbgena = 0;
 	dfStatus.x32off = X32Off;
-//	dfStatus.onewatt = 0;
+	dfStatus.onewatt = 1;
 //	dfStatus.digclk = 0;
-//	dfStatus.battpc = 0;
+	dfStatus.battpc = 1;
 //	dfStatus.phpct = 0;
 //	dfStatus.wakeonpm = 0;
-//	dfStatus.font = 0;
+	dfStatus.font = 1;
 //	dfStatus.nfe = 0;
 //	dfRezSS = 0;
 //	dfRezLockedSS = 0;
@@ -456,17 +456,17 @@ __myevic__ void ResetDataFlash()
 //	dfRezLockedTCR = 0;
 //	dfTCRIndex = 0;
 //	dfScrMainTime = 0;
-	dfTCRM[0] = 100;
-	dfTCRM[1] = 110;
-	dfTCRM[2] = 120;
-	dfScreenSaver = SSAVER_CLOCK;
+	dfTCRM[0] = 185;
+	dfTCRM[1] = 185;
+	dfTCRM[2] = 185;
+	dfScreenSaver = SSAVER_NONE;
 //	dfTCMode = 0;
 //	dfScreenProt = 0;
 //	MemClear( dfSavedCfgRez, sizeof(dfSavedCfgRez) );
 //	MemClear( dfSavedCfgPwr, sizeof(dfSavedCfgPwr) );
 //	dfFBBest = 0;
 //	dfFBSpeed = 0;
-//	dfBattPC = 0;
+	dfBattPC = 1;
 	dfContrast = 45;
 //	dfModesSel = 0;
 	dfClkRatio = RTC_DEF_CLK_RATIO;
@@ -476,9 +476,9 @@ __myevic__ void ResetDataFlash()
 	dfClick[1] = CLICK_ACTION_EDIT;
 //	dfClick[2] = CLICK_ACTION_NONE;
 	dfDimTimeout = 30;
-//	dfBatteryModel = 0;
+	dfBatteryModel = 4;
 	dfPreheatPwr = 200;
-	dfTCAlgo = TCALGO_DEF;
+	dfTCAlgo = TCALGO_PID;
 	dfTCBoost = 50;
 	dfPID.P = PID_P_DEF;
 	dfPID.I = PID_I_DEF;
@@ -502,7 +502,7 @@ __myevic__ void DFCheckValuesValidity()
 	int i,v;
 
 	if ( dfMode >= 7 )
-		dfMode = 4;
+		dfMode = 3;
 
 	if (( dfProtec < FIRE_PROTEC_MIN ) || ( dfProtec > FIRE_PROTEC_MAX ))
 		dfProtec = FIRE_PROTEC_DEF;
@@ -514,7 +514,7 @@ __myevic__ void DFCheckValuesValidity()
 		dfPower = 200;
 
 	if ( dfTCPower > MaxTCPower || dfTCPower < 10 )
-		dfTCPower = 200;
+		dfTCPower = 700;
 
 	if ( dfPuffCount > 99999 || dfTimeCount > 999999 )
 	{
@@ -535,17 +535,17 @@ __myevic__ void DFCheckValuesValidity()
 	if ( dfIsCelsius > 1 )
 	{
 		dfIsCelsius = 1;
-		dfTemp = 200;
+		dfTemp = 180;
 	}
 	else if ( dfIsCelsius )
 	{
-		if ( dfTemp < 100 || dfTemp > 315 )
-			dfTemp = 200;
+		if ( dfTemp < 150 || dfTemp > 260 )
+			dfTemp = 180;
 	}
 	else
 	{
-		if ( dfTemp < 200 || dfTemp > 600 )
-			dfTemp = 450;
+		if ( dfTemp < 300 || dfTemp > 500 )
+			dfTemp = 355;
 	}
 
 	if ( dfRezTI > 150 )
@@ -613,7 +613,7 @@ __myevic__ void DFCheckValuesValidity()
 		dfRezTCR = 0;
 
 	if ( dfScreenSaver >= SSAVER_MAX )
-		dfScreenSaver = SSAVER_CLOCK;
+		dfScreenSaver = SSAVER_NONE;
 
 	if ( dfRezLockedTCR > 1 )
 		dfRezLockedTCR = 0;
@@ -705,7 +705,7 @@ __myevic__ void DFCheckValuesValidity()
 		dfPreheatTime = 0;
 
 	if ( dfTCAlgo >= TCALGO_MAX )
-		dfTCAlgo = TCALGO_DEF;
+		dfTCAlgo = TCALGO_PID;
 
 	if ( dfTCBoost > 100 )
 		dfTCBoost = 50;

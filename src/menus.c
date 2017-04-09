@@ -518,8 +518,8 @@ __myevic__ void IFMenuOnClick()
 			if ( dfIsCelsius )
 			{
 				dfTemp = FarenheitToC( dfTemp );
-				if ( dfTemp < 100 ) dfTemp = 100;
-				if ( dfTemp > 315 ) dfTemp = 315;
+				if ( dfTemp < 150 ) dfTemp = 150;
+				if ( dfTemp > 260 ) dfTemp = 260;
 			}
 			else
 			{
@@ -527,8 +527,8 @@ __myevic__ void IFMenuOnClick()
 				int rem = dfTemp % 5;
 				dfTemp -= rem;
 				if ( rem >= 3 ) dfTemp += 5;
-				if ( dfTemp < 200 ) dfTemp = 200;
-				if ( dfTemp > 600 ) dfTemp = 600;
+				if ( dfTemp < 300 ) dfTemp = 300;
+				if ( dfTemp > 500 ) dfTemp = 500;
 			}
 			break;
 
