@@ -1,5 +1,8 @@
-## **myevic**
-This is myevic Custom Firmware.
+## **tubomyevic**
+this firmware fork is for a project that is not related directly with e-cig , eliquid vaping.
+
+## **This software is under developer use it at you own risk**
+
 
 ### Compatible hardwares:
 * Joyetech
