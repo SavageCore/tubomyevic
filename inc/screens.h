@@ -144,6 +144,7 @@ extern const uint8_t String_TIME_s[];
 extern const uint8_t String_PUFF_s[];
 extern const uint8_t String_SMART[];
 extern const uint8_t String_End[];
+extern const uint8_t String_Cruise[];
 
 //-------------------------------------------------------------------------
 
@@ -298,6 +299,7 @@ extern const uint8_t String_Curve[];
 extern const uint8_t String_Enable[];
 extern const uint8_t String_Reset[];
 extern const uint8_t String_Splash[];
+
 
 
 //==============================================================================

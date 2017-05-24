@@ -218,7 +218,7 @@ __myevic__ void VapingMenuIDraw( int it, int line, int sel )
 		case 4:	// Protec
 			DrawFillRect( 34, line, 63, line+12, 0 );
 			DrawImage( 58, line+2, 0x94 );
-			DrawValueRight( 56, line+2, dfProtec, 1, 0x0B, 0 );
+			DrawValueRight( 56, line+2, dfProtec, 0, 0x0B, 0 );
 			if ( sel && gFlags.edit_value )
 				InvertRect( 0, line, 63, line+12 );
 			break;
@@ -355,6 +355,10 @@ __myevic__ void ClicksMenuIDraw( int it, int line, int sel )
 
 		case CLICK_ACTION_NEXT_MODE:
 			DrawString( String_ModePlus, 20, line+2 );
+			break;
+
+		case CLICK_ACTION_CRUISE:
+			DrawString( String_Cruise, 20, line+2 );
 			break;
 
 		case CLICK_ACTION_ON_OFF:

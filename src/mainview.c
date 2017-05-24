@@ -355,10 +355,10 @@ __myevic__ void ShowFireDuration( int line )
 	int x;
 	DrawFillRect( 0, line, 63, line+15, 1 );
 	DrawFillRect( 1, line+1, 62, line+14, 0 );
-	x = ( FireDuration > dfProtec / 2 ) ? 5 : 38;
-	DrawValue( x, line+4, FireDuration, 1, 0xB, 0 );
+	x = ( FireDuration > dfProtec *10 / 2 ) ? 5 : 38;
+	DrawValue( x, line+4, FireDuration/10, 0, 0xB, 0 );
 	DrawImage( x + 15 + 6 * ( FireDuration > 99 ), line+4, 0x94 );
-	InvertRect( 2, line+2, 2 + 59 * FireDuration / dfProtec, line+13 );
+	InvertRect( 2, line+2, 2 + 59 * FireDuration / dfProtec / 10, line+13 );
 }
 
 

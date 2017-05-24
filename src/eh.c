@@ -195,7 +195,7 @@ __myevic__ void EventHandler()
 				}
 			}
 
-			if ( gFlags.firing )
+			if ( gFlags.firing && !gFlags.autopuff)
 			{
 				KeyPressTime |= 0x8000;
 				return;
@@ -582,7 +582,7 @@ __myevic__ void EventHandler()
 					break;
 
 				case 3:
-					TCR = 120;
+					TCR = 185;
 					break;
 
 				case 4:
@@ -725,7 +725,7 @@ __myevic__ void EventHandler()
 			}
 			AtoWarmUp();
 			if ( !gFlags.firing || LastInputs != 1 )
-				StopFire();
+				if (!gFlags.autopuff) StopFire();
 			gFlags.refresh_display = 1;
 			Screen = 2;
 			ScreenDuration = 1;
@@ -811,7 +811,7 @@ __myevic__ void EventHandler()
 			StopFire();
 			if ( AtoError )
 				return;
-			if ( FireDuration >= FIRE_PROTEC_MAX )
+			if ( FireDuration >= dfProtec *10 )
 			{
 				gFlags.refresh_display = 1;
 				Screen = 23;

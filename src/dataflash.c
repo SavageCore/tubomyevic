@@ -472,7 +472,7 @@ __myevic__ void ResetDataFlash()
 	dfClkRatio = RTC_DEF_CLK_RATIO;
 	dfVVRatio = VVEL_DEF_RATIO;
 //	dfPreheatTime = 0;
-	dfClick[0] = CLICK_ACTION_CLOCK;
+	dfClick[0] = CLICK_ACTION_CRUISE;
 	dfClick[1] = CLICK_ACTION_EDIT;
 //	dfClick[2] = CLICK_ACTION_NONE;
 	dfDimTimeout = 30;

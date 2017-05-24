@@ -334,7 +334,7 @@ __myevic__ void GetUserInput()
 	// 60 milliseconds before an event is emitted.
 	// (Taking into account the 50ms debounce time)
 
-	if ( KeyPressTime == 6 )
+	if ( KeyPressTime == 6)
 	{
 		gFlags.user_idle = 0;
 
@@ -374,13 +374,6 @@ __myevic__ void GetUserInput()
 					break;
 
 				case 2:
-					AutoPuffTimer=6000;
- 					Event = EVENT_AUTO_PUFF;
-					gFlags.autopuff=1;
-					if ( Screen != 1 || !EditModeTimer || EditItemIndex != 4 )
-					{
-						Event = 1;	// fire
-					}
 				case 3:
 				case 4:
 					switch ( dfClick[FireClickCount-2] )
@@ -407,6 +400,10 @@ __myevic__ void GetUserInput()
 
 						case CLICK_ACTION_NEXT_MODE:
 							FireClicksEvent = EVENT_NEXT_MODE;	// change mode
+							break;
+
+						case CLICK_ACTION_CRUISE:
+							FireClicksEvent = EVENT_CRUISE;	// cruise control
 							break;
 
 						case CLICK_ACTION_ON_OFF:
@@ -594,7 +591,7 @@ __myevic__ void GetUserInput()
 				KeyPressTime = FIRE_PROTEC_MAX * 10 + 100;
 				gFlags.user_idle = 1;
 			}
-			else if ( gFlags.firing && FireDuration >= dfProtec )
+			else if ( ( gFlags.firing ) && FireDuration >= dfProtec * 10)
 			{
 				Event = 24;	// 10s protection
 			}
@@ -1260,6 +1257,7 @@ __myevic__ int CustomEvents()
 				MainView();
 			else
 				StopFire();
+				Event = 24;
 			break;
 
 		case EVENT_CLK_ADJUST:
@@ -1291,6 +1289,16 @@ __myevic__ int CustomEvents()
 			SetScreen( 107, 30 );
 			EditModeTimer = 3000;
 			EditItemIndex = 0;
+			break;
+
+		case EVENT_CRUISE:
+					AutoPuffTimer=dfProtec*100;
+ 					Event = EVENT_AUTO_PUFF;
+					gFlags.autopuff=1;
+					if ( Screen != 1 || !EditModeTimer || EditItemIndex != 4 )
+					{
+						Event = 1;	// fire
+					}
 			break;
 
 		default:
