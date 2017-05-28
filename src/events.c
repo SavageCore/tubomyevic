@@ -190,6 +190,10 @@ __myevic__ void GetUserInput()
 
 	if ( ( !PE0 || AutoPuffTimer ) && PD2 && PD3 )
 	{
+		if ( ( gFlags.autopuff ) && FireDuration >= dfProtec * 10)
+			{
+				Event = 24;	// 10s protection
+			}
 		if ( !PE0 && !gFlags.autopuff) AutoPuffTimer = 0;
 
 		if (( LastInputs == 5 ) || ( LastInputs == 6 ))
@@ -349,7 +353,7 @@ __myevic__ void GetUserInput()
 
 		Event = UserInputs;
 
-		if ( UserInputs == 1 )
+		if ( UserInputs == 1 || gFlags.autopuff )
 		{
 			FireClickTimer = 40;
 			++FireClickCount;

@@ -478,11 +478,13 @@ __myevic__ void ReadAtoCurrent()
 			return;
 		}
 
+		if (!gFlags.autopuff) {
 		AtoStatus = 1;
 
 		if ( gFlags.firing ) Event = 25;
 
 		StopFire();
+		}
 
 		myprintf(	"\n"
 					" Short %d! u32ADValue_Res_temp(%d) u32ADValue_CurVol_temp(%d)"

@@ -809,6 +809,8 @@ __myevic__ void EventHandler()
 
 		case 24:	// 10s Fire protection
 			StopFire();
+			AutoPuffTimer=0;
+			gFlags.autopuff=0;
 			if ( AtoError )
 				return;
 			if ( FireDuration >= dfProtec *10 )

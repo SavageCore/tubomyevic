@@ -352,12 +352,13 @@ __myevic__ void DrawAPTLine( int line )
 //=============================================================================
 __myevic__ void ShowFireDuration( int line )
 {
-	int x;
+	int x = 38;
 	DrawFillRect( 0, line, 63, line+15, 1 );
 	DrawFillRect( 1, line+1, 62, line+14, 0 );
-	x = ( FireDuration > dfProtec *10 / 2 ) ? 5 : 38;
-	DrawValue( x, line+4, FireDuration/10, 0, 0xB, 0 );
-	DrawImage( x + 15 + 6 * ( FireDuration > 99 ), line+4, 0x94 );
+	//x = ( FireDuration > dfProtec *10 / 2 ) ? 5 : 38;
+	DrawString( String_Cruise, 16, line+4 );
+	//DrawValue( x, line+4, FireDuration/10, 0, 0xB, 0 );
+	//DrawImage( x + 15 + 6 * ( FireDuration > 99 ), line+4, 0x94 );
 	InvertRect( 2, line+2, 2 + 59 * FireDuration / dfProtec / 10, line+13 );
 }
 
@@ -395,6 +396,7 @@ __myevic__ void DrawInfoLines()
 				{
 					DrawPwrLine( AtoPower( AtoVolts ), 52 );
 				}
+				if (gFlags.autopuff) ShowFireDuration( 71 );
 				break;
 			case 4:
 			case 5:
@@ -434,7 +436,7 @@ __myevic__ void DrawInfoLines()
 		}
 	}
 
-	DrawCoilLine( 71 );
+	if (!gFlags.autopuff) DrawCoilLine( 71 );
 	DrawAPTLine( 90 );
 }
 
