@@ -2008,6 +2008,8 @@ __myevic__ void TweakTargetVoltsPID()
 	pwr = AtoPowerLimit( pwr );
 	if ( pwr > dfTCPower ) pwr = dfTCPower;
 	//if ( pwr > BatteryMaxPwr ) pwr = BatteryMaxPwr;
+	if (NumBatteries == 1 && BatteryPercent < 50 && pwr > 500) pwr = 500;
+	if (NumBatteries == 1 && BatteryPercent < 25 && pwr > 400) pwr = 400;	
 
 	volts = GetVoltsForPower( pwr );
 
