@@ -1281,7 +1281,7 @@ __myevic__ int CustomEvents()
 			break;
 
 		case EVENT_CRUISE:
-					AutoPuffTimer=dfProtec*100;
+					AutoPuffTimer=dfProtec*500;
  					Event = EVENT_AUTO_PUFF;
 					gFlags.autopuff=1;
 					if ( Screen != 1 || !EditModeTimer || EditItemIndex != 4 )
