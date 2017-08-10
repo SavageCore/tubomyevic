@@ -84,6 +84,7 @@ typedef struct
 /* 08000000 */	unsigned int dfmt2:1;
 /* 10000000 */	unsigned int pcurve:1;
 
+
 // Do not exceed 32 bits;
 // if you may do so, create another bitfield.
 }
@@ -183,6 +184,7 @@ typedef struct dfParams
 /* 00E0 */	uint16_t	Millis;
 /* 00E2 */	uint8_t		Profile;
 /* 00E3 */	int8_t		BVOffset[4];
+/* 00E4 */ 	int8_t		ecolvl;
 }
 dfParams_t;
 
@@ -368,6 +370,8 @@ extern dfStruct_t DataFlash;
 #define dfPID			DFP(PID)
 #define dfMillis		DFP(Millis)
 #define dfProfile		DFP(Profile)
+#define ecolvl			DFP(ecolvl)
+
 
 #define dfFWVersion		DFI(FWVersion)
 #define dffmcCID        DFI(fmcCID)

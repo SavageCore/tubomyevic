@@ -352,14 +352,14 @@ __myevic__ void DrawAPTLine( int line )
 //=============================================================================
 __myevic__ void ShowFireDuration( int line )
 {
-	int x = 38;
+	//int x = 38;
 	DrawFillRect( 0, line, 63, line+15, 1 );
 	DrawFillRect( 1, line+1, 62, line+14, 0 );
 	//x = ( FireDuration > dfProtec *10 / 2 ) ? 5 : 38;
 	DrawString( String_Cruise, 16, line+4 );
 	//DrawValue( x, line+4, FireDuration/10, 0, 0xB, 0 );
 	//DrawImage( x + 15 + 6 * ( FireDuration > 99 ), line+4, 0x94 );
-	InvertRect( 2, line+2, 2 + 59 * FireDuration / dfProtec / 10, line+13 );
+	InvertRect( 2, line+2, 2 + 59 * FireDuration / dfProtec / 50, line+13 );
 }
 
 
@@ -546,7 +546,7 @@ __myevic__ void ShowMainView()
 	unsigned int v26; // r2@168
 	int v27; // r3@169
 
-	if ( !gFlags.firing )
+	if ( !gFlags.firing && !gFlags.autopuff )
 	{
 		if ( gFlags.splash && SplashTimer )
 		{

@@ -470,7 +470,7 @@ __myevic__ void ResetDataFlash()
 	dfContrast = 45;
 //	dfModesSel = 0;
 	dfClkRatio = RTC_DEF_CLK_RATIO;
-	dfVVRatio = VVEL_DEF_RATIO;
+	ecolvl = ECOLVL_DEF;
 //	dfPreheatTime = 0;
 	dfClick[0] = CLICK_ACTION_CRUISE;
 	dfClick[1] = CLICK_ACTION_EDIT;
@@ -627,7 +627,7 @@ __myevic__ void DFCheckValuesValidity()
 	for ( i = 0 ; i < 3 ; ++i )
 	{
 		if ( dfTCRM[i] > 999 )
-			dfTCRM[i] = 120;
+			dfTCRM[i] = 185;
 	}
 
 	if ( dfBattPC > 1 )
@@ -657,8 +657,8 @@ __myevic__ void DFCheckValuesValidity()
 	if ( dfClkRatio < RTC_MIN_CLOCK_RATIO || dfClkRatio > RTC_MAX_CLOCK_RATIO )
 		dfClkRatio = RTC_DEF_CLK_RATIO;
 
-	if ( dfVVRatio < VVEL_MIN_RATIO || dfVVRatio > VVEL_MAX_RATIO )
-		dfVVRatio = VVEL_DEF_RATIO;
+	if ( ecolvl < ECOLVL_MIN || ecolvl > ECOLVL_MAX )
+		ecolvl = ECOLVL_DEF;
 
 	if ( dfPHDelay > 180 )
 		dfPHDelay = 0;

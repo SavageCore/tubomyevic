@@ -190,7 +190,7 @@ __myevic__ void GetUserInput()
 
 	if ( ( !PE0 || AutoPuffTimer ) && PD2 && PD3 )
 	{
-		if ( ( gFlags.autopuff ) && FireDuration >= dfProtec * 10)
+		if ( ( gFlags.autopuff ) && FireDuration >= dfProtec * 50)
 			{
 				Event = 24;	// 10s protection
 			}
@@ -204,26 +204,11 @@ __myevic__ void GetUserInput()
 	else
 	{
 
-		if (gFlags.autopuff)
-			{
-				if ( LastInputs == 1 )
-					{
-						AutoPuffTimer = 0;
-						gFlags.autopuff = 0;
-						StopFire();
-					}
-			}
 		if ( gFlags.firing )
 		{
 			if ( LastInputs == 1 )
 			{
 				StopFire();
-				if (gFlags.autopuff)
-					{
-						AutoPuffTimer = 0;
-						gFlags.autopuff = 0;
-						StopFire();
-					}
 			}
 			gFlags.user_idle = 1;
 			LastInputs = -1;
@@ -595,7 +580,7 @@ __myevic__ void GetUserInput()
 				KeyPressTime = FIRE_PROTEC_MAX * 10 + 100;
 				gFlags.user_idle = 1;
 			}
-			else if ( ( gFlags.firing ) && FireDuration >= dfProtec * 10)
+			else if ( ( gFlags.firing ) && FireDuration >= dfProtec * 50)
 			{
 				Event = 24;	// 10s protection
 			}
@@ -1303,6 +1288,7 @@ __myevic__ int CustomEvents()
 					{
 						Event = 1;	// fire
 					}
+					gFlags.refresh_display = 1;
 			break;
 
 		default:

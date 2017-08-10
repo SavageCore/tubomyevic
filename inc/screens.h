@@ -252,7 +252,7 @@ extern const uint8_t String_Dial[];
 extern const uint8_t String_Invert[];
 extern const uint8_t String_SHR[];
 extern const uint8_t String_Tetra[];
-extern const uint8_t String_Vaped[];
+extern const uint8_t String_ecolvl[];
 extern const uint8_t String_BVO[];
 extern const uint8_t String_mlkJ[];
 extern const uint8_t String_LSL[];

@@ -215,22 +215,22 @@ __myevic__ void VapingMenuIDraw( int it, int line, int sel )
 {
 	switch ( it )
 	{
-		case 4:	// Protec
-			DrawFillRect( 34, line, 63, line+12, 0 );
+		case 3:	// Protec
+			DrawFillRect( 32, line, 63, line+12, 0 );
 			DrawImage( 58, line+2, 0x94 );
-			DrawValueRight( 56, line+2, dfProtec, 0, 0x0B, 0 );
+			DrawValueRight( 56, line+2, dfProtec*5, 0, 0x0B, 0 );
 			if ( sel && gFlags.edit_value )
 				InvertRect( 0, line, 63, line+12 );
 			break;
 
-		case 5:	// Vaped
-			DrawFillRect( 39, line, 63, line+12, 0 );
-			DrawString( dfStatus.vapedml ? String_ml : String_mld, 43, line+2 );
-			break;
+//		case 5:	// Vaped
+//			DrawFillRect( 39, line, 63, line+12, 0 );
+//			DrawString( dfStatus.vapedml ? String_ml : String_mld, 43, line+2 );
+//			break;
 
-		case 6: // mL/kJ
+		case 4: // ecolvl
 			DrawFillRect( 39, line, 63, line+12, 0 );
-			DrawValueRight( 61, line+2, dfVVRatio, 0, 0x0B, 0 );
+			DrawValueRight( 61, line+2, ecolvl, 0, 0x0B, 0 );
 			if ( sel && gFlags.edit_value )
 				InvertRect( 0, line, 63, line+12 );
 			break;
@@ -242,16 +242,16 @@ __myevic__ void VapingMenuOnClick()
 {
 	switch ( CurrentMenuItem )
 	{
-		case 4:	// Protec
+		case 3:	// Protec
 			gFlags.edit_value ^= 1;
 			break;
 
-		case 5:	// Vaped
-			dfStatus.vapedml ^= 1;
-			UpdateDFTimer = 50;
-			break;
+//		case 5:	// Vaped
+//			dfStatus.vapedml ^= 1;
+//			UpdateDFTimer = 50;
+//			break;
 
-		case 6: // mL/kJ
+		case 4: // ecolvl
 			gFlags.edit_value ^= 1;
 			break;
 	}
@@ -272,7 +272,7 @@ __myevic__ int VapingMenuOnEvent( int event )
 		case 2:	// Plus
 			switch ( CurrentMenuItem )
 			{
-				case 4: // Protec
+				case 3: // Protec
 					if ( ++dfProtec > FIRE_PROTEC_MAX )
 					{
 						if ( KeyTicks < 5 ) dfProtec = FIRE_PROTEC_MIN;
@@ -281,11 +281,11 @@ __myevic__ int VapingMenuOnEvent( int event )
 					vret = 1;
 					break;
 
-				case 6: // mL/kJ
-					if ( ++dfVVRatio > VVEL_MAX_RATIO )
+				case 4: // ecolvl
+					if ( ++ecolvl > ECOLVL_MAX )
 					{
-						if ( KeyTicks < 5 ) dfVVRatio = VVEL_MIN_RATIO;
-						else dfVVRatio = VVEL_MAX_RATIO;
+						if ( KeyTicks < 5 ) ecolvl = ECOLVL_MIN;
+						else ecolvl = ECOLVL_MAX;
 					}
 					vret = 1;
 					break;
@@ -295,7 +295,7 @@ __myevic__ int VapingMenuOnEvent( int event )
 		case 3:	// Minus
 			switch ( CurrentMenuItem )
 			{
-				case 4: // Protec
+				case 3: // Protec
 					if ( --dfProtec < FIRE_PROTEC_MIN )
 					{
 						if ( KeyTicks < 5 ) dfProtec = FIRE_PROTEC_MAX;
@@ -304,11 +304,11 @@ __myevic__ int VapingMenuOnEvent( int event )
 					vret = 1;
 					break;
 
-				case 6: // mL/kJ
-					if ( --dfVVRatio < VVEL_MIN_RATIO )
+				case 4: // ecolvl
+					if ( --ecolvl < ECOLVL_MIN )
 					{
-						if ( KeyTicks < 5 ) dfVVRatio = VVEL_MAX_RATIO;
-						else dfVVRatio = VVEL_MIN_RATIO;
+						if ( KeyTicks < 5 ) ecolvl = ECOLVL_MAX;
+						else ecolvl = ECOLVL_MIN;
 					}
 					vret = 1;
 					break;
@@ -2251,15 +2251,13 @@ const menu_t VapingMenu =
 	0,
 	VapingMenuOnClick+1,
 	VapingMenuOnEvent+1,
-	8,
+	6,
 	{
 		{ String_Preheat, &PreheatMenu, 0, MACTION_SUBMENU },
 		{ String_Modes, &ModesMenu, 0, MACTION_SUBMENU },
 		{ String_Algo, &AlgoMenu, 0, MACTION_SUBMENU },
-		{ String_Curve, &CurveMenu, 0, MACTION_SUBMENU },
 		{ String_Prot, 0, 0, 0 },
-		{ String_Vaped, 0, 0, 0 },
-		{ String_mlkJ, 0, 0, 0 },
+		{ String_ecolvl, 0, 0, 0 },
 		{ String_Back, 0, EVENT_PARENT_MENU, 0 }
 	}
 };

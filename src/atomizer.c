@@ -1742,12 +1742,17 @@ typedef struct algoctl
 	uint8_t		boost;
 	uint16_t	ttemp;
 	uint16_t	atemp;
+	uint16_t	otemp;
 	uint16_t	mvolts;
 	uint16_t	power;
 	uint32_t	counter;
 	int32_t		error;
 	int32_t		integ;
 	uint8_t		start;
+	uint16_t	avgpwr;
+	uint16_t	navgpwr;
+	uint16_t	ecotemp;
+	uint16_t	trigpwrup;
 }
 algoctl_t;
 
@@ -1857,6 +1862,29 @@ __myevic__ void InitTCAlgo()
 			AlgoCtl.atemp = FarenheitToC( AtoTemp );
 			AlgoCtl.error = AlgoCtl.ttemp - AlgoCtl.atemp;
 			AlgoCtl.integ = 0;
+			AlgoCtl.navgpwr=15;
+			AlgoCtl.avgpwr=dfTCPower;
+			AlgoCtl.otemp=dfIsCelsius ? dfTemp : FarenheitToC( dfTemp );
+
+			switch ( ecolvl )
+			{
+				case 0:
+					AlgoCtl.ecotemp=AlgoCtl.otemp;
+					AlgoCtl.trigpwrup=130;
+					break;
+				case 1:
+					AlgoCtl.ecotemp=140+5*(AlgoCtl.otemp-150)/7;
+					AlgoCtl.trigpwrup=130+20*(AlgoCtl.ecotemp-140)/25;
+					break;
+				case 2:
+					AlgoCtl.ecotemp=135+(AlgoCtl.otemp-150)/2;
+					AlgoCtl.trigpwrup=130+20*(AlgoCtl.ecotemp-135)/35;
+					break;
+				case 3:
+					AlgoCtl.ecotemp=135;
+					AlgoCtl.trigpwrup=125;
+					break;
+			}
 			break;
 
 		case TCALGO_JOY:
@@ -1982,6 +2010,7 @@ __myevic__ void TweakTargetVoltsPID()
 	int32_t ediff;
 	uint32_t volts;
 
+
 	++AlgoCtl.counter;
 
 	AtoTemp = FilterWMean( &TempFilter, AtoTemp );
@@ -1991,6 +2020,15 @@ __myevic__ void TweakTargetVoltsPID()
 		return;
 
 	AlgoCtl.atemp = FarenheitToC( AtoTemp );
+
+	
+	// if watts < 185, no draw detected at hi temp, activated eco
+	if (gFlags.autopuff && ecolvl>0 && AlgoCtl.atemp > AlgoCtl.ecotemp && AlgoCtl.avgpwr < 185) {
+	AlgoCtl.ttemp=AlgoCtl.ecotemp;
+	AlgoCtl.error = AlgoCtl.ttemp - AlgoCtl.atemp;
+	AlgoCtl.integ = 0;
+	} 
+
 
 	error = AlgoCtl.ttemp - AlgoCtl.atemp;
 	ediff = error - AlgoCtl.error;
@@ -2007,9 +2045,21 @@ __myevic__ void TweakTargetVoltsPID()
 	if ( pwr < 10 ) pwr = 10;
 	pwr = AtoPowerLimit( pwr );
 	if ( pwr > dfTCPower ) pwr = dfTCPower;
-	//if ( pwr > BatteryMaxPwr ) pwr = BatteryMaxPwr;
-	if (NumBatteries == 1 && BatteryPercent < 50 && pwr > 500) pwr = 500;
-	if (NumBatteries == 1 && BatteryPercent < 25 && pwr > 400) pwr = 400;	
+
+	// hit the power breaks when battery sags on single cell mods
+	if (NumBatteries == 1 && RTBattVolts < 320 && pwr > 500) pwr = 500;
+	if (NumBatteries == 1 && RTBattVolts < 300 && pwr > 400) pwr = 400;	
+	if (NumBatteries == 1 && RTBattVolts < 290 && pwr > 250) pwr = 250;	
+
+	// running power average
+	AlgoCtl.avgpwr= (AlgoCtl.avgpwr*(AlgoCtl.navgpwr-1)+pwr)/AlgoCtl.navgpwr;
+
+	// if watts > trigpwrup at ecotemp, draw detected, switch to hi temp, reset I of pid	
+	if (gFlags.autopuff && ecolvl>0 && AlgoCtl.atemp <= AlgoCtl.ecotemp && AlgoCtl.avgpwr > AlgoCtl.trigpwrup) {
+	AlgoCtl.ttemp=AlgoCtl.otemp;
+	//AlgoCtl.error = AlgoCtl.ttemp - AlgoCtl.atemp;
+	AlgoCtl.integ = 0;
+	}
 
 	volts = GetVoltsForPower( pwr );
 

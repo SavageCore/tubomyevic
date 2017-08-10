@@ -14,13 +14,13 @@
 #define SHUNT_MIN_VALUE	75
 #define SHUNT_MAX_VALUE	150
 
-#define VVEL_DEF_RATIO	 360
-#define VVEL_MIN_RATIO	  50
-#define VVEL_MAX_RATIO	1000
+#define ECOLVL_DEF	 0
+#define ECOLVL_MIN	  0
+#define ECOLVL_MAX	3
 
-#define FIRE_PROTEC_MIN  10
-#define FIRE_PROTEC_DEF 240
-#define FIRE_PROTEC_MAX 240
+#define FIRE_PROTEC_MIN  2
+#define FIRE_PROTEC_DEF 180
+#define FIRE_PROTEC_MAX 180
 
 enum
 {
