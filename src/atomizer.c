@@ -26,7 +26,7 @@ uint32_t	MaxTCPower;
 uint32_t	MaxVolts;
 uint32_t	MaxPower;
 uint32_t	MaxCurrent;
-uint16_t	FireDuration;
+uint32_t	FireDuration;
 uint16_t	AtoTemp;
 uint16_t	AtoCurrent;
 uint16_t	AtoRez;
@@ -1874,15 +1874,15 @@ __myevic__ void InitTCAlgo()
 					break;
 				case 1:
 					AlgoCtl.ecotemp=140+5*(AlgoCtl.otemp-150)/7;
-					AlgoCtl.trigpwrup=130+20*(AlgoCtl.ecotemp-140)/25;
+					AlgoCtl.trigpwrup=120+20*(AlgoCtl.ecotemp-140)/25;
 					break;
 				case 2:
 					AlgoCtl.ecotemp=135+(AlgoCtl.otemp-150)/2;
-					AlgoCtl.trigpwrup=130+20*(AlgoCtl.ecotemp-135)/35;
+					AlgoCtl.trigpwrup=120+20*(AlgoCtl.ecotemp-135)/35;
 					break;
 				case 3:
 					AlgoCtl.ecotemp=135;
-					AlgoCtl.trigpwrup=125;
+					AlgoCtl.trigpwrup=110;
 					break;
 			}
 			break;
@@ -2023,7 +2023,7 @@ __myevic__ void TweakTargetVoltsPID()
 
 	
 	// if watts < 185, no draw detected at hi temp, activated eco
-	if (gFlags.autopuff && ecolvl>0 && AlgoCtl.atemp > AlgoCtl.ecotemp && AlgoCtl.avgpwr < 185) {
+	if (gFlags.autopuff && ecolvl>0 && AlgoCtl.atemp > AlgoCtl.ecotemp && AlgoCtl.avgpwr < 170) {
 	AlgoCtl.ttemp=AlgoCtl.ecotemp;
 	AlgoCtl.error = AlgoCtl.ttemp - AlgoCtl.atemp;
 	AlgoCtl.integ = 0;

@@ -809,7 +809,7 @@ __myevic__ void EventHandler()
 			gFlags.autopuff=0;
 			if ( AtoError )
 				return;
-			if ( FireDuration >= dfProtec *10 )
+			if ( FireDuration >= dfProtec *50ul )
 			{
 				gFlags.refresh_display = 1;
 				Screen = 23;

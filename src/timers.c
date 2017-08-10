@@ -20,7 +20,7 @@ volatile uint32_t	WarmUpCounter;
 volatile uint32_t	TickCount;
 
 uint16_t	SleepTimer;
-uint16_t	AutoPuffTimer;
+uint32_t	AutoPuffTimer;
 uint16_t	FadeOutTimer;
 
 

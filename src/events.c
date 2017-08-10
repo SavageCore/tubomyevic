@@ -190,7 +190,7 @@ __myevic__ void GetUserInput()
 
 	if ( ( !PE0 || AutoPuffTimer ) && PD2 && PD3 )
 	{
-		if ( ( gFlags.autopuff ) && FireDuration >= dfProtec * 50)
+		if ( ( gFlags.autopuff ) && FireDuration >= dfProtec * 50ul)
 			{
 				Event = 24;	// 10s protection
 			}
@@ -580,7 +580,7 @@ __myevic__ void GetUserInput()
 				KeyPressTime = FIRE_PROTEC_MAX * 10 + 100;
 				gFlags.user_idle = 1;
 			}
-			else if ( ( gFlags.firing ) && FireDuration >= dfProtec * 50)
+			else if ( ( gFlags.firing ) && FireDuration >= dfProtec * 50ul)
 			{
 				Event = 24;	// 10s protection
 			}
@@ -1281,7 +1281,7 @@ __myevic__ int CustomEvents()
 			break;
 
 		case EVENT_CRUISE:
-					AutoPuffTimer=dfProtec*500;
+					AutoPuffTimer=dfProtec*500ul;
  					Event = EVENT_AUTO_PUFF;
 					gFlags.autopuff=1;
 					if ( Screen != 1 || !EditModeTimer || EditItemIndex != 4 )

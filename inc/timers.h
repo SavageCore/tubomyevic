@@ -12,7 +12,7 @@ extern volatile uint32_t WarmUpCounter;
 extern volatile uint32_t TickCount;
 
 extern uint16_t	SleepTimer;
-extern uint16_t	AutoPuffTimer;
+extern uint32_t	AutoPuffTimer;
 extern uint16_t	FadeOutTimer;
 
 //-------------------------------------------------------------------------

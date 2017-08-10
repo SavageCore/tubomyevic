@@ -60,7 +60,7 @@ extern uint32_t	MaxVolts;
 extern uint32_t	MaxPower;
 extern uint32_t	MaxCurrent;
 extern uint16_t	TCR;
-extern uint16_t	FireDuration;
+extern uint32_t	FireDuration;
 extern uint16_t	AtoTemp;
 extern uint16_t	AtoCurrent;
 extern uint16_t	AtoRez;
