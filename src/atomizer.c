@@ -1874,15 +1874,15 @@ __myevic__ void InitTCAlgo()
 					break;
 				case 1:
 					AlgoCtl.ecotemp=140+5*(AlgoCtl.otemp-150)/7;
-					AlgoCtl.trigpwrup=120+20*(AlgoCtl.ecotemp-140)/25;
+					AlgoCtl.trigpwrup=125+20*(AlgoCtl.ecotemp-140)/25;
 					break;
 				case 2:
 					AlgoCtl.ecotemp=135+(AlgoCtl.otemp-150)/2;
-					AlgoCtl.trigpwrup=120+20*(AlgoCtl.ecotemp-135)/35;
+					AlgoCtl.trigpwrup=125+20*(AlgoCtl.ecotemp-135)/35;
 					break;
 				case 3:
 					AlgoCtl.ecotemp=135;
-					AlgoCtl.trigpwrup=110;
+					AlgoCtl.trigpwrup=115;
 					break;
 			}
 			break;
@@ -2049,7 +2049,7 @@ __myevic__ void TweakTargetVoltsPID()
 	// hit the power breaks when battery sags on single cell mods
 	if (NumBatteries == 1 && RTBattVolts < 320 && pwr > 500) pwr = 500;
 	if (NumBatteries == 1 && RTBattVolts < 300 && pwr > 400) pwr = 400;	
-	if (NumBatteries == 1 && RTBattVolts < 290 && pwr > 250) pwr = 250;	
+	if (NumBatteries == 1 && RTBattVolts < 290 && pwr > 300) pwr = 300;	
 
 	// running power average
 	AlgoCtl.avgpwr= (AlgoCtl.avgpwr*(AlgoCtl.navgpwr-1)+pwr)/AlgoCtl.navgpwr;

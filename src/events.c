@@ -222,7 +222,7 @@ __myevic__ void GetUserInput()
 			FireClicksEvent = 0;
 		}
 
-		if ( !dfStatus.off || IsMenuScreen() )
+		if ( !dfStatus.off || IsMenuScreen() || gFlags.autopuff)
 		{
 			if ( !PD2 ) UserInputs = 2;
 			if ( !PD3 ) UserInputs = 3;
