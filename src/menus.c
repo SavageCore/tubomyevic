@@ -361,6 +361,10 @@ __myevic__ void ClicksMenuIDraw( int it, int line, int sel )
 			DrawString( String_Cruise, 20, line+2 );
 			break;
 
+		case CLICK_ACTION_WARMUP:
+			DrawString( String_WarmUp, 20, line+2 );
+			break;
+
 		case CLICK_ACTION_ON_OFF:
 			DrawString( String_OnOff, 20, line+2 );
 			break;

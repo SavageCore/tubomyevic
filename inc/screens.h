@@ -145,6 +145,9 @@ extern const uint8_t String_PUFF_s[];
 extern const uint8_t String_SMART[];
 extern const uint8_t String_End[];
 extern const uint8_t String_Cruise[];
+extern const uint8_t String_WarmUp[];
+extern const uint8_t String_Tset[];
+extern const uint8_t String_eco[];
 
 //-------------------------------------------------------------------------
 

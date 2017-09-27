@@ -359,6 +359,12 @@ __myevic__ void StopFire()
 
 	AutoPuffTimer = 0;
 	gFlags.autopuff = 0;
+	if (gFlags.warmup) {
+		if (!dfStatus.onedegree) {
+				dfTemp=dfIsCelsius ? dfoTemp : (CelsiusToF( dfoTemp )+5)/10*10; // round up to 10F, due to round down in celsiustoF()
+			} else { dfTemp=dfIsCelsius ? dfoTemp : (CelsiusToF( dfoTemp )+4)/5*5; } // round up to 5F
+		gFlags.warmup = 0;
+	}
 	PreheatTimer = 0;
 
 	LowBatVolts = 0;
@@ -1837,7 +1843,6 @@ __myevic__ void InitTCAlgo()
 	AlgoCtl.start = 0;
 	AlgoCtl.boost = TCBoost;
 	AlgoCtl.ttemp = dfIsCelsius ? dfTemp : FarenheitToC( dfTemp );
-
 	AlgoCtl.counter = 0;
 
 	switch ( dfTCAlgo )
@@ -1865,6 +1870,8 @@ __myevic__ void InitTCAlgo()
 			AlgoCtl.navgpwr=15;
 			AlgoCtl.avgpwr=dfTCPower;
 			AlgoCtl.otemp=dfIsCelsius ? dfTemp : FarenheitToC( dfTemp );
+			gFlags.eco=0;
+			if (gFlags.warmup) AlgoCtl.ttemp=245; // if warmup set high temp
 
 			switch ( ecolvl )
 			{
@@ -2012,6 +2019,12 @@ __myevic__ void TweakTargetVoltsPID()
 
 
 	++AlgoCtl.counter;
+	//if (gFlags.warmup) AlgoCtl.ttemp=245; else AlgoCtl.ttemp = dfIsCelsius ? dfTemp : FarenheitToC( dfTemp );
+	
+	/*if (dfTemp != AlgoCtl.otemp) {
+		AlgoCtl.otemp=dfIsCelsius ? dfTemp : FarenheitToC( dfTemp );
+		AlgoCtl.integ = 0;
+	}*/
 
 	AtoTemp = FilterWMean( &TempFilter, AtoTemp );
 
@@ -2023,11 +2036,12 @@ __myevic__ void TweakTargetVoltsPID()
 
 	
 	// if watts < 185, no draw detected at hi temp, activated eco
-	if (gFlags.autopuff && ecolvl>0 && AlgoCtl.atemp > AlgoCtl.ecotemp && AlgoCtl.avgpwr < 170) {
+	if (gFlags.autopuff && !gFlags.warmup && ecolvl>0 && AlgoCtl.atemp > AlgoCtl.ecotemp && AlgoCtl.avgpwr < 170) {
 	AlgoCtl.ttemp=AlgoCtl.ecotemp;
 	AlgoCtl.error = AlgoCtl.ttemp - AlgoCtl.atemp;
 	AlgoCtl.integ = 0;
-	} 
+	gFlags.eco=1;
+	} else if (gFlags.warmup) AlgoCtl.ttemp=245; else if (!gFlags.eco) AlgoCtl.ttemp = dfIsCelsius ? dfTemp : FarenheitToC( dfTemp );
 
 
 	error = AlgoCtl.ttemp - AlgoCtl.atemp;
@@ -2047,7 +2061,7 @@ __myevic__ void TweakTargetVoltsPID()
 	if ( pwr > dfTCPower ) pwr = dfTCPower;
 
 	// hit the power breaks when battery sags on single cell mods
-	if (NumBatteries == 1 && RTBattVolts < 320 && pwr > 500) pwr = 500;
+	if (NumBatteries == 1 && RTBattVolts < 305 && pwr > 500) pwr = 500;
 	if (NumBatteries == 1 && RTBattVolts < 300 && pwr > 400) pwr = 400;	
 	if (NumBatteries == 1 && RTBattVolts < 290 && pwr > 300) pwr = 300;	
 
@@ -2055,10 +2069,23 @@ __myevic__ void TweakTargetVoltsPID()
 	AlgoCtl.avgpwr= (AlgoCtl.avgpwr*(AlgoCtl.navgpwr-1)+pwr)/AlgoCtl.navgpwr;
 
 	// if watts > trigpwrup at ecotemp, draw detected, switch to hi temp, reset I of pid	
-	if (gFlags.autopuff && ecolvl>0 && AlgoCtl.atemp <= AlgoCtl.ecotemp && AlgoCtl.avgpwr > AlgoCtl.trigpwrup) {
+	if (gFlags.autopuff && !gFlags.warmup && ecolvl>0 && AlgoCtl.atemp <= AlgoCtl.ecotemp && AlgoCtl.avgpwr > AlgoCtl.trigpwrup) {
 	AlgoCtl.ttemp=AlgoCtl.otemp;
 	//AlgoCtl.error = AlgoCtl.ttemp - AlgoCtl.atemp;
 	AlgoCtl.integ = 0;
+	gFlags.eco=0;
+	}
+
+
+	// if avgpwr < value, end warmup, reset temp
+	if (gFlags.warmup && AlgoCtl.avgpwr < 205) {
+	gFlags.warmup=0;
+	gFlags.autopuff=0;
+	AutoPuffTimer=0;
+	StopFire();
+		if (!dfStatus.onedegree) {
+			dfTemp=dfIsCelsius ? dfoTemp : (CelsiusToF( dfoTemp )+5)/10*10; // round up to 10F, due to round down in celsiustoF()
+		} else { dfTemp=dfIsCelsius ? dfoTemp : (CelsiusToF( dfoTemp )+4)/5*5; } // round up to 5F
 	}
 
 	volts = GetVoltsForPower( pwr );

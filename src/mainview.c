@@ -26,7 +26,7 @@ __myevic__ void MainView()
 		{
 			HideLogo = 3;
 		}
-		Screen = 1;
+		if ( !gFlags.autopuff || !gFlags.warmup ) Screen = 1;
 		ScreenDuration = GetMainScreenDuration();
 	}
 	else
@@ -345,6 +345,17 @@ __myevic__ void DrawAPTLine( int line )
 			DrawTime( 5, line, &rtd, 0x1F );
 			break;
 		}
+		case 9:	// Tset temperature
+		{
+			DrawString( String_Tset, 0, line+2 );
+
+			int t = dfTemp;
+			//int t = dfIsCelsius ? dfTemp : CelsiusToF( dfTemp );
+
+			DrawValue( t>99?31:39, line, t, 0, 0x1F, t>99?3:2 );
+			DrawImage( 56, line+2, dfIsCelsius ? 0xC9 : 0xC8 );
+			break;
+		}
 	}
 }
 
@@ -356,7 +367,9 @@ __myevic__ void ShowFireDuration( int line )
 	DrawFillRect( 0, line, 63, line+15, 1 );
 	DrawFillRect( 1, line+1, 62, line+14, 0 );
 	//x = ( FireDuration > dfProtec *10 / 2 ) ? 5 : 38;
-	DrawString( String_Cruise, 16, line+4 );
+	if (gFlags.warmup) DrawString( String_WarmUp, 14, line+4 );
+	else if (gFlags.eco) DrawString( String_eco, 22, line+4 );
+	else DrawString( String_Cruise, 16, line+4 );
 	//DrawValue( x, line+4, FireDuration/10, 0, 0xB, 0 );
 	//DrawImage( x + 15 + 6 * ( FireDuration > 99 ), line+4, 0x94 );
 	InvertRect( 2, line+2, 2 + 59 * FireDuration / dfProtec / 50, line+13 );
@@ -396,7 +409,7 @@ __myevic__ void DrawInfoLines()
 				{
 					DrawPwrLine( AtoPower( AtoVolts ), 52 );
 				}
-				if (gFlags.autopuff) ShowFireDuration( 71 );
+				if (gFlags.autopuff /*&& !gFlags.warmup*/) ShowFireDuration( 71 );
 				break;
 			case 4:
 			case 5:
@@ -437,7 +450,17 @@ __myevic__ void DrawInfoLines()
 	}
 
 	if (!gFlags.autopuff) DrawCoilLine( 71 );
-	DrawAPTLine( 90 );
+	//if (gFlags.warmup) DrawCoilLine( 71 );
+	if (!gFlags.autopuff) DrawAPTLine( 90 ); else {
+			int line=90;
+			DrawString( String_Tset, 0, line+2 );
+
+			int t = dfTemp;
+			//int t = dfIsCelsius ? dfTemp : CelsiusToF( dfTemp );
+
+			DrawValue( t>99?31:39, line, t, 0, 0x1F, t>99?3:2 );
+			DrawImage( 56, line+2, dfIsCelsius ? 0xC9 : 0xC8 );
+	}
 }
 
 

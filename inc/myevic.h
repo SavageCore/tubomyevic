@@ -149,6 +149,8 @@ typedef struct
 /* 00400000 */	int led_on:1;
 /* 00800000 */	int splash:1;
 				int autopuff:1;
+				int warmup:1;
+				int eco:1;
 }
 
 gFlags_t;

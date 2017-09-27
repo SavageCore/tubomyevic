@@ -112,6 +112,7 @@ __myevic__ void TempPlus()
 	if ( dfIsCelsius )
 	{
 		dfTemp += dfStatus.onedegree ? 1 : 5;
+		dfoTemp=dfTemp;
 		if ( dfTemp > 260 )
 		{
 			dfTemp = ( KeyTicks < 5 ) ? 150 : 260;
@@ -120,6 +121,7 @@ __myevic__ void TempPlus()
 	else
 	{
 		dfTemp += dfStatus.onedegree ? 5 : 10;
+		dfoTemp=dfTemp;
 		if ( dfTemp > 500 )
 		{
 			dfTemp = ( KeyTicks < 5 ) ? 300 : 500;
@@ -135,14 +137,17 @@ __myevic__ void TempMinus()
 	if ( dfIsCelsius )
 	{
 		dfTemp -= dfStatus.onedegree ? 1 : 5;
+		dfoTemp=dfTemp;
 		if ( dfTemp < 150 )
 		{
 			dfTemp = ( KeyTicks < 5 ) ? 260 : 150;
+
 		}
 	}
 	else
 	{
 		dfTemp -= dfStatus.onedegree ? 5 : 10;
+		dfoTemp=dfTemp;
 		if ( dfTemp < 300 )
 		{
 			dfTemp = ( KeyTicks < 5 ) ? 500 : 300;
@@ -561,9 +566,9 @@ __myevic__ void EventHandler()
 			}
 
 		//	myprintf( "StartFire\n" );
-
+			dfoTemp=dfIsCelsius ? dfTemp : FarenheitToC( dfTemp );
 			gFlags.firing = 1;
-			FireDuration = 0;
+			if (!gFlags.autopuff) FireDuration = 0; else AutoPuffTimer=dfProtec*500ul;
 
 			if ( BattProbeCount == 1 ) BattProbeCount = 2;
 
@@ -804,17 +809,15 @@ __myevic__ void EventHandler()
 			return;
 
 		case 24:	// 10s Fire protection
-			StopFire();
-			AutoPuffTimer=0;
-			gFlags.autopuff=0;
 			if ( AtoError )
 				return;
-			if ( FireDuration >= dfProtec *50ul )
+			if ( FireDuration >= dfProtec *50ul && !gFlags.autopuff)
 			{
 				gFlags.refresh_display = 1;
 				Screen = 23;
 				ScreenDuration = 10;
 			}
+			StopFire();
 			return;
 
 		case 23:	// Reset Time counter
@@ -1043,7 +1046,7 @@ __myevic__ void EventHandler()
 				}
 			}
 
-			if ( Screen == 2 )
+			if ( Screen == 2 && !gFlags.autopuff )
 			{
 				MainView();
 			}
@@ -1179,7 +1182,7 @@ __myevic__ void EventHandler()
 				}
 			}
 
-			if ( Screen == 2 )
+			if ( Screen == 2 && !gFlags.autopuff )
 			{
 				MainView();
 			}
@@ -1254,7 +1257,7 @@ __myevic__ void EventHandler()
 							break;
 
 						case 4:
-							if ( ++dfAPT > 8 ) dfAPT = 0;
+							if ( ++dfAPT > 9 ) dfAPT = 0;
 							break;
 
 						case 5:
@@ -1315,7 +1318,6 @@ __myevic__ void EventHandler()
 					}
 
 				}
-
 	            MainView();
 	            if ( KeyTicks >= 5 )
 	            {

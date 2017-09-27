@@ -420,9 +420,10 @@ __myevic__ void ResetDataFlash()
 	dfRezType = 1;
 	dfTempAlgo = 1;
 	dfTemp = 195;
+	dfoTemp = dfTemp;
 //	dfResistance = 0;
 	dfUIVersion = 2;
-//	dfAPT = 0;
+	dfAPT = 9;
 //	dfRezTI = 0;
 //	dfRezNI = 0;
 //	dfRezLockedTI = 0;
@@ -473,8 +474,8 @@ __myevic__ void ResetDataFlash()
 	ecolvl = ECOLVL_DEF;
 //	dfPreheatTime = 0;
 	dfClick[0] = CLICK_ACTION_CRUISE;
-	dfClick[1] = CLICK_ACTION_EDIT;
-//	dfClick[2] = CLICK_ACTION_NONE;
+	dfClick[1] = CLICK_ACTION_WARMUP;
+	dfClick[2] = CLICK_ACTION_EDIT;
 	dfDimTimeout = 30;
 	dfBatteryModel = 4;
 	dfPreheatPwr = 200;
@@ -526,7 +527,7 @@ __myevic__ void DFCheckValuesValidity()
 	if ( dfUIVersion != 2 )
 		dfUIVersion = 2;
 
-	if ( dfAPT > 8 )
+	if ( dfAPT > 9 )
 		dfAPT = 0;
 
 	if ( dfTempAlgo != 1 && dfTempAlgo != 2 && dfTempAlgo != 3 && dfTempAlgo != 4 )
@@ -677,10 +678,10 @@ __myevic__ void DFCheckValuesValidity()
 		dfClick[1] = CLICK_ACTION_EDIT;
 		dfClick[2] = CLICK_ACTION_NONE;
 	}
-	else if ( v == 0 )
+	/*else if ( v == 0 )
 	{
 		dfClick[1] = CLICK_ACTION_EDIT;
-	}
+	}*/
 
 	if ( dfDimTimeout < 5 || dfDimTimeout > 60 )
 		dfDimTimeout = ScrMainTimes[dfScrMainTime];

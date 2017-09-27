@@ -190,11 +190,11 @@ __myevic__ void GetUserInput()
 
 	if ( ( !PE0 || AutoPuffTimer ) && PD2 && PD3 )
 	{
-		if ( ( gFlags.autopuff ) && FireDuration >= dfProtec * 50ul)
+		if ( /*( !gFlags.autopuff ) &&*/ FireDuration >= dfProtec * 50ul)
 			{
 				Event = 24;	// 10s protection
 			}
-		if ( !PE0 && !gFlags.autopuff) AutoPuffTimer = 0;
+		if ( !PE0 && gFlags.autopuff) AutoPuffTimer = 0;
 
 		if (( LastInputs == 5 ) || ( LastInputs == 6 ))
 			return;
@@ -204,7 +204,7 @@ __myevic__ void GetUserInput()
 	else
 	{
 
-		if ( gFlags.firing )
+		if ( gFlags.firing && !gFlags.autopuff )
 		{
 			if ( LastInputs == 1 )
 			{
@@ -224,8 +224,29 @@ __myevic__ void GetUserInput()
 
 		if ( !dfStatus.off || IsMenuScreen() || gFlags.autopuff)
 		{
-			if ( !PD2 ) UserInputs = 2;
-			if ( !PD3 ) UserInputs = 3;
+			if ( !PD2 ) {
+				UserInputs = 2;
+			 	if (gFlags.warmup) {
+					if (!dfStatus.onedegree) {
+						dfTemp=dfIsCelsius ? dfoTemp : (CelsiusToF( dfoTemp )+9)/10*10; // round up, due to round down in celsiustoF()
+					} else { dfTemp=dfIsCelsius ? dfoTemp : (CelsiusToF( dfoTemp )+4)/5*5; }
+				gFlags.warmup=0;
+				}
+				//gFlags.autopuff=0;
+				//StopFire();
+			}
+			if ( !PD3 ) {
+				UserInputs = 3;
+			 	if (gFlags.warmup) {
+					if (!dfStatus.onedegree) {
+						dfTemp=dfIsCelsius ? dfoTemp : (CelsiusToF( dfoTemp )+9)/10*10; // round up, due to round down in celsiustoF()
+					} else { dfTemp=dfIsCelsius ? dfoTemp : (CelsiusToF( dfoTemp )+4)/5*5; }
+				gFlags.warmup=0;
+				}
+				//gFlags.autopuff=0;
+				//gFlags.warmup=0;
+				//StopFire();
+			}
 		}
 
 		if ( !PD2 && !PD3 ) UserInputs = 4;
@@ -338,7 +359,7 @@ __myevic__ void GetUserInput()
 
 		Event = UserInputs;
 
-		if ( UserInputs == 1 || gFlags.autopuff )
+		if ( UserInputs == 1 )
 		{
 			FireClickTimer = 40;
 			++FireClickCount;
@@ -395,6 +416,10 @@ __myevic__ void GetUserInput()
 							FireClicksEvent = EVENT_CRUISE;	// cruise control
 							break;
 
+						case CLICK_ACTION_WARMUP:
+							FireClicksEvent = EVENT_WARMUP;	// cruise control
+							break;
+
 						case CLICK_ACTION_ON_OFF:
 							FireClicksEvent = 17;	// Switch On/Off
 							break;
@@ -444,7 +469,28 @@ __myevic__ void GetUserInput()
 			}
 			else
 			{
-				Event = 2;	// + button
+				if (Screen==2) {
+				if ( dfIsCelsius )
+				{
+					dfTemp += dfStatus.onedegree ? 1 : 5;
+					dfoTemp=dfTemp;
+					if ( dfTemp > 260 )
+					{
+						dfTemp = ( KeyTicks < 5 ) ? 150 : 260;
+					}
+				}
+				else
+				{
+					dfTemp += dfStatus.onedegree ? 5 : 10;
+					dfoTemp=dfTemp;
+					if ( dfTemp > 500 )
+					{
+						dfTemp = ( KeyTicks < 5 ) ? 300 : 500;
+					}
+				}
+				}
+				if (gFlags.warmup) gFlags.warmup=0;
+				else Event = 2;	// + button
 			}
 		}
 		else if ( UserInputs == 3 )
@@ -465,7 +511,28 @@ __myevic__ void GetUserInput()
 			}
 			else
 			{
-				Event = 3;	// - button
+				if (Screen==2) {
+				if ( dfIsCelsius )
+				{
+					dfTemp -= dfStatus.onedegree ? 1 : 5;
+					dfoTemp=dfTemp;
+					if ( dfTemp < 150 )
+					{
+						dfTemp = ( KeyTicks < 5 ) ? 260 : 150;
+					}
+				}
+				else
+				{
+					dfTemp -= dfStatus.onedegree ? 5 : 10;
+					dfoTemp=dfTemp;
+					if ( dfTemp < 300 )
+					{
+						dfTemp = ( KeyTicks < 5 ) ? 500 : 300;
+					}
+				}
+				}
+				if (gFlags.warmup) gFlags.warmup=0;
+				else Event = 3;	// - button
 			}
 		}
 	}
@@ -486,6 +553,7 @@ __myevic__ void GetUserInput()
 		else if ( UserInputs == 5 )
 		{
 			// Fire + Right button
+			StopFire();
 			if ( IsMenuScreen() )
 			{
 				Event = EVENT_EXIT_MENUS;
@@ -1291,6 +1359,18 @@ __myevic__ int CustomEvents()
 					gFlags.refresh_display = 1;
 			break;
 
+		case EVENT_WARMUP:
+					AutoPuffTimer=dfProtec*500ul;
+ 					Event = EVENT_AUTO_PUFF;
+					gFlags.autopuff=1;
+					gFlags.warmup=1;
+					if ( Screen != 1 || !EditModeTimer || EditItemIndex != 4 )
+					{
+						Event = 1;	// fire
+					}
+					gFlags.refresh_display = 1;
+			break;
+
 		default:
 			vret = 0;
 			break;
@@ -1300,4 +1380,5 @@ __myevic__ int CustomEvents()
 }
 
 //==========================================================================
+
 

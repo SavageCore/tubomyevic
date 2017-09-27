@@ -221,6 +221,14 @@ __myevic__ void DrawScreen()
 		gFlags.fading = 0;
 	}
 
+	if (gFlags.autopuff || gFlags.warmup) {
+		FadeOutTimer=0;
+		gFlags.fading=0;
+		Screen=2;
+		gFlags.refresh_display=1;
+		return;
+	}
+
 	if (( gFlags.firing ) && ISMODETC(dfMode))
 		TenthOfSecs += 5;
 	else
@@ -244,7 +252,7 @@ __myevic__ void DrawScreen()
 				SleepTimer = 0;
 			else
 			{
-				if (( !gFlags.firing )
+				if (( !gFlags.firing && !gFlags.autopuff && !gFlags.warmup )
 				&&	( !dfStealthOn )
 				&&	( SleepTimer > 0 )
 				&&	( dfScreenSaver > 0 )
@@ -509,7 +517,8 @@ __myevic__ void ShowRTCSpeed()
 
 __myevic__ int IsClockOnScreen()
 {
-	return (  ((( Screen == 1 ) || ( Screen == 2 )) && ( dfAPT == 8 ))
+	//return (  ((( Screen == 1 ) || ( Screen == 2 )) && ( dfAPT == 8 ))
+	return (  (( Screen == 1 ) && ( dfAPT == 8 ))
 			|| (( Screen == 1 ) && ( dfStatus.clock ))
 			|| (( Screen == 60 ) && ( dfScreenSaver == SSAVER_CLOCK ))
 			||  ( Screen == 103 )
