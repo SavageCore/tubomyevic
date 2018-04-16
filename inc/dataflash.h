@@ -186,6 +186,12 @@ typedef struct dfParams
 /* 00E3 */	int8_t		BVOffset[4];
 /* 00E4 */ 	int8_t		ecolvl;
 /* 00E5 */	uint16_t	oTemp;
+/* 00E7 */ 	int8_t		w2c;
+/* 00E8 */	uint16_t	HiTemp;
+/* 00EA */	uint16_t	LoTemp;
+/* 00EC */	int8_t		Tsteps;
+/* 00EE */	uint8_t		Puffs;
+/* 00 */	uint8_t		ptcount;
 }
 dfParams_t;
 
@@ -372,7 +378,13 @@ extern dfStruct_t DataFlash;
 #define dfMillis		DFP(Millis)
 #define dfProfile		DFP(Profile)
 #define ecolvl			DFP(ecolvl)
+#define w2c			DFP(w2c)
 #define dfoTemp			DFP(oTemp)
+#define HiTemp			DFP(HiTemp)
+#define LoTemp			DFP(LoTemp)
+#define Tsteps			DFP(Tsteps)
+#define Puffs			DFP(puffs)
+#define ptcount			DFP(ptcount)
 
 
 #define dfFWVersion		DFI(FWVersion)

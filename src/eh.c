@@ -115,7 +115,7 @@ __myevic__ void TempPlus()
 		dfoTemp=dfTemp;
 		if ( dfTemp > 260 )
 		{
-			dfTemp = ( KeyTicks < 5 ) ? 150 : 260;
+			dfTemp = ( KeyTicks < 5 ) ? 100 : 260;
 		}
 	}
 	else
@@ -124,7 +124,7 @@ __myevic__ void TempPlus()
 		dfoTemp=dfTemp;
 		if ( dfTemp > 500 )
 		{
-			dfTemp = ( KeyTicks < 5 ) ? 300 : 500;
+			dfTemp = ( KeyTicks < 5 ) ? 210 : 500;
 		}
 	}
 }
@@ -138,9 +138,9 @@ __myevic__ void TempMinus()
 	{
 		dfTemp -= dfStatus.onedegree ? 1 : 5;
 		dfoTemp=dfTemp;
-		if ( dfTemp < 150 )
+		if ( dfTemp < 100 )
 		{
-			dfTemp = ( KeyTicks < 5 ) ? 260 : 150;
+			dfTemp = ( KeyTicks < 5 ) ? 260 : 100;
 
 		}
 	}
@@ -148,9 +148,9 @@ __myevic__ void TempMinus()
 	{
 		dfTemp -= dfStatus.onedegree ? 5 : 10;
 		dfoTemp=dfTemp;
-		if ( dfTemp < 300 )
+		if ( dfTemp < 210 )
 		{
-			dfTemp = ( KeyTicks < 5 ) ? 500 : 300;
+			dfTemp = ( KeyTicks < 5 ) ? 500 : 210;
 		}
 	}
 }
@@ -496,7 +496,7 @@ __myevic__ void EventHandler()
 				{
 					word_200000BE = dfRezTCR * 10 + ( dfMillis >> 12 );
 
-					if ( 3 * dfRezTCR >= 2 * NewRez )
+					if ( 2 * dfRezTCR >= 1 * NewRez )
 					{
 						if (	dfRezTCR + dfRezTCR / 20 < NewRez
 							&&	dfRezTCR + 1 < NewRez
@@ -622,7 +622,7 @@ __myevic__ void EventHandler()
 						}
 						else
 						{
-							dfMode = 4;
+							//dfMode = 4;
 						}
 					}
 					else

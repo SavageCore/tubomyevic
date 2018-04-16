@@ -347,7 +347,7 @@ __myevic__ void DrawAPTLine( int line )
 		}
 		case 9:	// Tset temperature
 		{
-			DrawString( String_Tset, 0, line+2 );
+			DrawString( String_TEMP_s, 0, line+2 );
 
 			int t = dfTemp;
 			//int t = dfIsCelsius ? dfTemp : CelsiusToF( dfTemp );
@@ -369,6 +369,7 @@ __myevic__ void ShowFireDuration( int line )
 	//x = ( FireDuration > dfProtec *10 / 2 ) ? 5 : 38;
 	if (gFlags.warmup) DrawString( String_WarmUp, 14, line+4 );
 	else if (gFlags.eco) DrawString( String_eco, 22, line+4 );
+	else if (ptcount>0) {DrawString( String_Tstep, 4, line+4 );DrawValue( 34, line+4, ptcount, 0, 0xB, 0 );DrawString( String_of, 42, line+4 );DrawValue( 54, line+4, Tsteps, 0, 0xB, 0 );}
 	else DrawString( String_Cruise, 16, line+4 );
 	//DrawValue( x, line+4, FireDuration/10, 0, 0xB, 0 );
 	//DrawImage( x + 15 + 6 * ( FireDuration > 99 ), line+4, 0x94 );
@@ -453,7 +454,7 @@ __myevic__ void DrawInfoLines()
 	//if (gFlags.warmup) DrawCoilLine( 71 );
 	if (!gFlags.autopuff) DrawAPTLine( 90 ); else {
 			int line=90;
-			DrawString( String_Tset, 0, line+2 );
+			DrawString( String_TEMP_s, 0, line+2 );
 
 			int t = dfTemp;
 			//int t = dfIsCelsius ? dfTemp : CelsiusToF( dfTemp );

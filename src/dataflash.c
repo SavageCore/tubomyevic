@@ -472,10 +472,14 @@ __myevic__ void ResetDataFlash()
 //	dfModesSel = 0;
 	dfClkRatio = RTC_DEF_CLK_RATIO;
 	ecolvl = ECOLVL_DEF;
+	w2c=0;
+	LoTemp=190;
+	HiTemp=210;
+	Tsteps=2;
 //	dfPreheatTime = 0;
 	dfClick[0] = CLICK_ACTION_CRUISE;
 	dfClick[1] = CLICK_ACTION_WARMUP;
-	dfClick[2] = CLICK_ACTION_EDIT;
+	dfClick[2] = CLICK_ACTION_TSTEP;
 	dfDimTimeout = 30;
 	dfBatteryModel = 4;
 	dfPreheatPwr = 200;
@@ -537,16 +541,26 @@ __myevic__ void DFCheckValuesValidity()
 	{
 		dfIsCelsius = 1;
 		dfTemp = 180;
+		LoTemp=190;
+		HiTemp=210;
 	}
 	else if ( dfIsCelsius )
 	{
-		if ( dfTemp < 150 || dfTemp > 260 )
+		if ( dfTemp < 100 || dfTemp > 260 )
 			dfTemp = 180;
+		if ( LoTemp < 100 || LoTemp > 260 )
+			LoTemp=190;
+		if ( HiTemp < 100 || HiTemp > 260 )
+			HiTemp=210;
 	}
 	else
 	{
-		if ( dfTemp < 300 || dfTemp > 500 )
+		if ( dfTemp < 210 || dfTemp > 500 )
 			dfTemp = 355;
+		if ( LoTemp < 210 || LoTemp > 500 )
+			LoTemp=365;
+		if ( HiTemp < 210 || HiTemp > 500 )
+			HiTemp=410;
 	}
 
 	if ( dfRezTI > 150 )
@@ -660,6 +674,13 @@ __myevic__ void DFCheckValuesValidity()
 
 	if ( ecolvl < ECOLVL_MIN || ecolvl > ECOLVL_MAX )
 		ecolvl = ECOLVL_DEF;
+
+	if ( w2c < 0 || w2c > 2 )
+		w2c = 0;
+
+	if ( Tsteps < 2 || Tsteps > 7 )
+		Tsteps = 2;
+
 
 	if ( dfPHDelay > 180 )
 		dfPHDelay = 0;

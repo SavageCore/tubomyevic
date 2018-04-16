@@ -417,7 +417,11 @@ __myevic__ void GetUserInput()
 							break;
 
 						case CLICK_ACTION_WARMUP:
-							FireClicksEvent = EVENT_WARMUP;	// cruise control
+							FireClicksEvent = EVENT_WARMUP;	// warmup
+							break;
+
+						case CLICK_ACTION_TSTEP:
+							FireClicksEvent = EVENT_TSTEP;	// warmup
 							break;
 
 						case CLICK_ACTION_ON_OFF:
@@ -469,8 +473,9 @@ __myevic__ void GetUserInput()
 			}
 			else
 			{
-				if (Screen==2) {
-				if ( dfIsCelsius )
+				if (Screen==2 && ptcount==0) {
+				if (gFlags.warmup) gFlags.warmup=0;
+				else if ( dfIsCelsius )
 				{
 					dfTemp += dfStatus.onedegree ? 1 : 5;
 					dfoTemp=dfTemp;
@@ -489,7 +494,12 @@ __myevic__ void GetUserInput()
 					}
 				}
 				}
-				if (gFlags.warmup) gFlags.warmup=0;
+
+				else if (ptcount>0 && ptcount<=Tsteps-1) {
+					ptcount++; 
+					FireDuration = (ptcount-1)*dfProtec*50/Tsteps;
+					dfTemp=LoTemp+(ptcount-1)*(HiTemp-LoTemp)/(Tsteps-1);
+				}
 				else Event = 2;	// + button
 			}
 		}
@@ -511,8 +521,9 @@ __myevic__ void GetUserInput()
 			}
 			else
 			{
-				if (Screen==2) {
-				if ( dfIsCelsius )
+				if (Screen==2 && ptcount==0) {
+				if (gFlags.warmup) gFlags.warmup=0;
+				else if ( dfIsCelsius )
 				{
 					dfTemp -= dfStatus.onedegree ? 1 : 5;
 					dfoTemp=dfTemp;
@@ -531,7 +542,11 @@ __myevic__ void GetUserInput()
 					}
 				}
 				}
-				if (gFlags.warmup) gFlags.warmup=0;
+				else if (ptcount>1 && ptcount<=Tsteps) {
+					ptcount--; 
+					FireDuration = (ptcount-1)*dfProtec*50/Tsteps;
+					dfTemp=LoTemp+(ptcount-1)*(HiTemp-LoTemp)/(Tsteps-1);
+				}
 				else Event = 3;	// - button
 			}
 		}
@@ -1352,6 +1367,7 @@ __myevic__ int CustomEvents()
 					AutoPuffTimer=dfProtec*500ul;
  					Event = EVENT_AUTO_PUFF;
 					gFlags.autopuff=1;
+					ptcount=0;
 					if ( Screen != 1 || !EditModeTimer || EditItemIndex != 4 )
 					{
 						Event = 1;	// fire
@@ -1364,6 +1380,23 @@ __myevic__ int CustomEvents()
  					Event = EVENT_AUTO_PUFF;
 					gFlags.autopuff=1;
 					gFlags.warmup=1;
+					if (w2c==2) dfTemp=LoTemp;
+					if ( Screen != 1 || !EditModeTimer || EditItemIndex != 4 )
+					{
+						Event = 1;	// fire
+					}
+					gFlags.refresh_display = 1;
+			break;
+
+		case EVENT_TSTEP:
+					AutoPuffTimer=dfProtec*500ul;
+ 					Event = EVENT_AUTO_PUFF;
+					gFlags.autopuff=1;
+					//LoTemp=190;
+					//HiTemp=210;
+					//Tsteps=3;
+					ptcount=1;
+					dfTemp=LoTemp;
 					if ( Screen != 1 || !EditModeTimer || EditItemIndex != 4 )
 					{
 						Event = 1;	// fire

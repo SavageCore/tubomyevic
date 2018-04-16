@@ -365,6 +365,11 @@ __myevic__ void StopFire()
 			} else { dfTemp=dfIsCelsius ? dfoTemp : (CelsiusToF( dfoTemp )+4)/5*5; } // round up to 5F
 		gFlags.warmup = 0;
 	}
+	if (ptcount > 0) { if (!dfStatus.onedegree) {
+				dfTemp=dfIsCelsius ? dfTemp/5*5:  dfTemp/10*10; // round up to 10F, due to round down in celsiustoF()
+			} else { dfTemp=dfIsCelsius ? dfTemp :  dfTemp/5*5; } // round up to 5F
+			ptcount=0;
+	}
 	PreheatTimer = 0;
 
 	LowBatVolts = 0;
@@ -2033,7 +2038,8 @@ __myevic__ void TweakTargetVoltsPID()
 		return;
 
 	AlgoCtl.atemp = FarenheitToC( AtoTemp );
-
+	
+	
 	
 	// if watts < 185, no draw detected at hi temp, activated eco
 	if (gFlags.autopuff && !gFlags.warmup && ecolvl>0 && AlgoCtl.atemp > AlgoCtl.ecotemp && AlgoCtl.avgpwr < 170) {
@@ -2046,6 +2052,8 @@ __myevic__ void TweakTargetVoltsPID()
 
 	error = AlgoCtl.ttemp - AlgoCtl.atemp;
 	ediff = error - AlgoCtl.error;
+
+	if (error==-10) AlgoCtl.integ=0;
 
 	AlgoCtl.error = error;
 	AlgoCtl.integ += error;
@@ -2078,11 +2086,27 @@ __myevic__ void TweakTargetVoltsPID()
 
 
 	// if avgpwr < value, end warmup, reset temp
-	if (gFlags.warmup && AlgoCtl.avgpwr < 205) {
+	if (gFlags.warmup && AlgoCtl.avgpwr < 205 && FireDuration > 50) {
 	gFlags.warmup=0;
+	FireDuration=0;
+	AutoPuffTimer=dfProtec*500ul;
+	switch (w2c) {
+
+	case 0:
 	gFlags.autopuff=0;
 	AutoPuffTimer=0;
 	StopFire();
+	break;
+
+	case 1:
+	ptcount=0;
+	break;
+
+	case 2:
+	ptcount=1;
+	break;
+
+	}
 		if (!dfStatus.onedegree) {
 			dfTemp=dfIsCelsius ? dfoTemp : (CelsiusToF( dfoTemp )+5)/10*10; // round up to 10F, due to round down in celsiustoF()
 		} else { dfTemp=dfIsCelsius ? dfoTemp : (CelsiusToF( dfoTemp )+4)/5*5; } // round up to 5F
@@ -2123,6 +2147,7 @@ __myevic__ void TweakTargetVoltsTC()
 			break;
 
 		case TCALGO_PID:
+			if (ptcount > 0 && FireDuration > (ptcount)*dfProtec*50/Tsteps){ dfTemp=LoTemp+(ptcount)*(HiTemp-LoTemp)/(Tsteps-1); ptcount++;}
 			TweakTargetVoltsPID();
 			break;
 

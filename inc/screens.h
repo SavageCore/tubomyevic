@@ -148,6 +148,7 @@ extern const uint8_t String_Cruise[];
 extern const uint8_t String_WarmUp[];
 extern const uint8_t String_Tset[];
 extern const uint8_t String_eco[];
+extern const uint8_t String_Prot[];
 
 //-------------------------------------------------------------------------
 
@@ -256,6 +257,7 @@ extern const uint8_t String_Invert[];
 extern const uint8_t String_SHR[];
 extern const uint8_t String_Tetra[];
 extern const uint8_t String_ecolvl[];
+extern const uint8_t String_w2cru[];
 extern const uint8_t String_BVO[];
 extern const uint8_t String_mlkJ[];
 extern const uint8_t String_LSL[];
@@ -302,7 +304,11 @@ extern const uint8_t String_Curve[];
 extern const uint8_t String_Enable[];
 extern const uint8_t String_Reset[];
 extern const uint8_t String_Splash[];
-
+extern const uint8_t String_HiTemp[];
+extern const uint8_t String_LoTemp[];
+extern const uint8_t String_Tstep[];
+extern const uint8_t String_Puffs[];
+extern const uint8_t String_of[];
 
 
 //==============================================================================
