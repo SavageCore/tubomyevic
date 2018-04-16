@@ -113,18 +113,23 @@ __myevic__ void DrawPwrLine( int pwr, int pwrmax, int line )
 		return;
 
 	if ( pwrmax > 0 ) {
-		static const int WIDTH = 21;
-		DrawFillRect( 0, line, WIDTH+3, line+10, 1 );
-		DrawFillRect( 1, line+1, WIDTH+2, line+9, 0 );
-		int bar = (pwr * WIDTH / pwrmax);
-		if ( bar > WIDTH ) bar = WIDTH;
-		if ( bar > 0 ) {
-			uint8_t pattern = 0xDB;  // 11011011
-			for ( int x = 2; x < 2+bar; ++x ) {
-				DrawVPattern( x, line+2, 7, pattern );
-				pattern = (pattern >> 1) | (pattern << 2);
+		static const int WIDTH = 24;
+		for ( int x = 0; x <= WIDTH; x += 3 ) {
+			int h;
+			if ( x == 0 ) {
+				h = 2;
+			} else if ( x % 12 == 0 ) {
+				h = 1;
+			} else {
+				h = 0;
 			}
+			DrawVLine( x, line, line+h, 1 );
+			DrawVLine( x, line+9, line+9-h, 1 );
 		}
+		int bar = (pwr * WIDTH / pwrmax);
+		if ( bar < 0 ) bar = 0;
+		if ( bar > WIDTH ) bar = WIDTH;
+		DrawFillRect( 0, line+3, bar, line+6, 1 );
 	} else {
 		DrawString( String_PWR_s, 0, line+2 );
 	}

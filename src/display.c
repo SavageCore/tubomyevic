@@ -646,17 +646,6 @@ __myevic__ void DrawCircle( int x_centre, int y_centre, int r, int color, int fi
 
 
 //=========================================================================
-// Draws a vertical pattern, starting with the least significant bit
-//-------------------------------------------------------------------------
-__myevic__ void DrawVPattern( int x, int y, int height, uint32_t pattern ) {
-	if ( height > 32 ) return;
-	for ( int i = 0; i < height; ++i ) {
-		DrawPoint( x, y+i, (pattern >> i) & 1 );
-	}
-}
-
-
-//=========================================================================
 // Converts screen buffer in something readable
 //-------------------------------------------------------------------------
 __myevic__ void Screen2Bitmap( uint8_t *pu8Bitmap )
