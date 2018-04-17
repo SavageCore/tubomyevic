@@ -126,7 +126,7 @@ __myevic__ void DrawPwrLine( int pwr, int pwrmax, int line )
 			DrawVLine( x, line, line+h, 1 );
 			DrawVLine( x, line+9, line+9-h, 1 );
 		}
-		int bar = (pwr * WIDTH / pwrmax);
+		int bar = ( pwr * WIDTH / pwrmax );
 		if ( bar < 0 ) bar = 0;
 		if ( bar > WIDTH ) bar = WIDTH;
 		DrawFillRect( 0, line+3, bar, line+6, 1 );
@@ -428,7 +428,8 @@ __myevic__ void DrawInfoLines()
 				}
 				else
 				{
-					DrawPwrLine( AtoPower( AtoVolts ), dfTCPower, 52 );
+					const int pwrmax = dfStatus.pwrbar ? dfTCPower : 0;
+					DrawPwrLine( AtoPower( AtoVolts ), pwrmax, 52 );
 				}
 				if (gFlags.autopuff /*&& !gFlags.warmup*/) ShowFireDuration( 71 );
 				break;
