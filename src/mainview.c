@@ -107,30 +107,19 @@ __myevic__ void DrawMode()
 
 //=============================================================================
 
-__myevic__ void DrawPwrLine( int pwr, int pwrmax, int line )
+__myevic__ void DrawPwrLine( int pwr, int drawbar, int line )
 {
 	if ( BLINKITEM(2) && PD2 && PD3 )
 		return;
 
-	if ( pwrmax > 0 ) {
-		static const int WIDTH = 24;
-		for ( int x = 0; x <= WIDTH; x += 3 ) {
-			int h;
-			if ( x == 0 ) {
-				h = 2;
-			} else if ( x % 12 == 0 ) {
-				h = 1;
-			} else {
-				h = 0;
-			}
-			DrawVLine( x, line, line+h, 1 );
-			DrawVLine( x, line+9, line+9-h, 1 );
-		}
-		int bar = ( pwr * WIDTH / pwrmax );
-		if ( bar < 0 ) bar = 0;
-		if ( bar > WIDTH ) bar = WIDTH;
-		DrawFillRect( 0, line+3, bar, line+6, 1 );
-	} else {
+	if ( drawbar )
+	{
+		// Note: this always draws on line 52.
+		AnimPwrBar( 1 );
+		gFlags.animpwrbar = 1;
+	}
+	else
+	{
 		DrawString( String_PWR_s, 0, line+2 );
 	}
 
@@ -428,8 +417,7 @@ __myevic__ void DrawInfoLines()
 				}
 				else
 				{
-					const int pwrmax = dfStatus.pwrbar ? dfTCPower : 0;
-					DrawPwrLine( AtoPower( AtoVolts ), pwrmax, 52 );
+					DrawPwrLine( AtoPower( AtoVolts ), dfStatus.pwrbar, 52 );
 				}
 				if (gFlags.autopuff /*&& !gFlags.warmup*/) ShowFireDuration( 71 );
 				break;

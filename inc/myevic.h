@@ -151,6 +151,7 @@ typedef struct
 				int autopuff:1;
 				int warmup:1;
 				int eco:1;
+				int animpwrbar:1;
 }
 
 gFlags_t;
