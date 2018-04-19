@@ -924,6 +924,11 @@ __myevic__ void Main()
 				anim3d( 0 );
 			}
 
+			if ( Screen == 2 && gFlags.animpwrbar )
+			{
+				AnimPwrBar( 0 );
+			}
+
 			if ( Screen == 60 )
 			{
 				AnimateScreenSaver();
