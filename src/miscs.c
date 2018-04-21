@@ -825,7 +825,9 @@ __myevic__ void AnimPwrBar( int first )
 		tscaler = 0;
 	}
 
-	const int pwr = AtoPower( AtoVolts );
+	// Zero the bar when not firing, because Screen 2 remains visible
+	// for ~1 second after firing stops.
+	const int pwr = gFlags.firing ? AtoPower( AtoVolts ) : 0;
 	const int pwrmax = dfTCPower;
 
 	int bar = ( pwr * WIDTH / pwrmax );

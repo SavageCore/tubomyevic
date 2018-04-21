@@ -999,10 +999,7 @@ __myevic__ void Main()
 			if ( ShowProfNum )
 				--ShowProfNum;
 
-			if ( !( gFlags.firing && ISMODETC(dfMode) ) )
-			{
-				DrawScreen();
-			}
+			DrawScreen();
 
 			if ( KeyTicks < 5 )
 			{
@@ -1061,14 +1058,7 @@ __myevic__ void Main()
 
 			gFlags.osc_1hz ^= 1;
 
-			if ( gFlags.firing )
-			{
-				if ( ISMODETC(dfMode) )
-				{
-					DrawScreen();
-				}
-			}
-			else
+			if ( !gFlags.firing )
 			{
 				if
 				(	!dfStatus.off
