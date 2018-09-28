@@ -195,15 +195,17 @@ __myevic__ void DrawScreen()
 			case 107:
 				ShowPowerCurve();
 				break;
-			
+
 			default:
 				break;
 		}
 
 		if ( gFlags.debug & 1 )
 		{
-			DrawValueRight( 64, 120, Screen, 0, 0x01, 0 );
-			DrawValue( 0, 120, ScreenDuration, 0, 0x01, 0 );
+			// DrawValueRight( 64, 120, Screen, 0, 0x01, 0 );
+			// DrawValue( 0, 120, ScreenDuration, 0, 0x01, 0 );
+        	DrawValueRight( 64, 0, AtoRez, 0, 0x01, 0 ); //UserInputs LastInputs TargetVolts
+        	DrawValue( 0, 0, dfResistance, 0, 0x01, 0 ); //NextPreheatTimer UserInputs dfTempAlgo AutoPuffTimer
 		}
 
 		DisplayRefresh();
@@ -1102,7 +1104,7 @@ __myevic__ int SplashExists()
 
 	h = img->height;
 	l = img->width * h / 8;
-	
+
 	if ( img->width != 64 ) return 0;
 
 	for ( i = 0 ; i < l ; ++i )

@@ -1128,6 +1128,7 @@ __myevic__ int ExpertMenuOnEvent( int event )
 				case 7:	// Battery model
 					dfBatteryModel = BATTERY_CUSTOM;
 					SetBatteryModel();
+					gFlags.edit_value = 0;
 					vret = 1;
 					break;
 			}

@@ -295,7 +295,7 @@ __myevic__ void GetUserInput()
 					}
 				}
 			}
-			else if ( !ISCUBOID && !ISCUBO200 && !ISRX200S && !ISRX23 && !ISRX300 )
+			else if ( !ISCUBOID && !ISCUBO200 && !ISRX200S && !ISRX23 && !ISRX300 && !ISGEN3 )
 			{
 				if ( !PD7 && !gFlags.battery_charging )
 				{
@@ -496,7 +496,7 @@ __myevic__ void GetUserInput()
 				}
 
 				else if (ptcount>0 && ptcount<=Tsteps-1) {
-					ptcount++; 
+					ptcount++;
 					FireDuration = (ptcount-1)*dfProtec*50/Tsteps;
 					dfTemp=LoTemp+(ptcount-1)*(HiTemp-LoTemp)/(Tsteps-1);
 				}
@@ -543,7 +543,7 @@ __myevic__ void GetUserInput()
 				}
 				}
 				else if (ptcount>1 && ptcount<=Tsteps) {
-					ptcount--; 
+					ptcount--;
 					FireDuration = (ptcount-1)*dfProtec*50/Tsteps;
 					dfTemp=LoTemp+(ptcount-1)*(HiTemp-LoTemp)/(Tsteps-1);
 				}
@@ -724,7 +724,7 @@ __myevic__ int EvtFire()
 			vret = 1;
 		}
 		break;
-		
+
 		case 107:
 		{
 			EditModeTimer = 3000;
@@ -869,7 +869,7 @@ __myevic__ int EvtPlusButton()
 			vret = 1;
 		}
 		break;
-		
+
 		case 104:
 		{
 			RTCAdjustClock( 1 );
@@ -1413,5 +1413,3 @@ __myevic__ int CustomEvents()
 }
 
 //==========================================================================
-
-

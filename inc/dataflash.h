@@ -84,7 +84,7 @@ typedef struct
 /* 08000000 */	unsigned int dfmt2:1;
 /* 10000000 */	unsigned int pcurve:1;
 /* 20000000 */	unsigned int pwrbar:1;
-
+/* 40000000 */  unsigned int usbchghotoff:1;
 
 // Do not exceed 32 bits;
 // if you may do so, create another bitfield.

@@ -58,3 +58,5 @@ driver/*.sys
 genuine/
 wrkspc.txt
 nuvoton-sdk
+
+\.vscode/

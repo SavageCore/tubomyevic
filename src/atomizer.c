@@ -108,7 +108,7 @@ __myevic__ void SetPWMClock()
 #define MaxBuck  MaxDuty
 #define MinBoost MaxDuty
 
-	if ( ISCUBO200 || ISRX200S || ISRX23 || ISRX300 )
+	if ( ISCUBO200 || ISRX200S || ISRX23 || ISRX300 || ISGEN3 )
 	{
 		MaxDuty = 95 * PWMCycles / 100;
 	}
@@ -141,7 +141,7 @@ __myevic__ void InitPWM()
 	BuckDuty = 0;
 	PWM_SET_CMR( PWM0, BBC_PWMCH_BUCK, 0 );
 
-	if ( ISVTCDUAL || ISCUBOID || ISCUBO200 || ISRX200S || ISRX23 || ISRX300 )
+	if ( ISVTCDUAL || ISCUBOID || ISCUBO200 || ISRX200S || ISRX23 || ISRX300 || ISGEN3 )
 	{
 		PWM_ConfigOutputChannel( PWM0, BBC_PWMCH_CHARGER, BBC_PWM_FREQ, 0 );
 		PWM_EnableOutput( PWM0, 1 << BBC_PWMCH_CHARGER );
@@ -153,6 +153,10 @@ __myevic__ void InitPWM()
 		if ( ISCUBO200 || ISRX200S || ISRX23 || ISRX300 )
 		{
 			MaxChargerDuty = 512;
+		}
+		else if ( ISGEN3 )
+		{
+				MaxChargerDuty = 360;
 		}
 		else
 		{
@@ -254,17 +258,17 @@ __myevic__ void ClampAtoVolts()
 
 //=========================================================================
 //----- (00001274) --------------------------------------------------------
-__myevic__ uint16_t GetAtoVWVolts( uint16_t pwr )
+__myevic__ uint16_t GetAtoVWVolts( uint16_t pwr, uint16_t r )
 {
 	uint16_t volts; // r0@9
 
-	if ( AtoError || !AtoRez )
+	if ( AtoError || !r ) //AtoRez
 	{
 		volts = 330;
 	}
 	else
 	{
-		volts = sqrtul( 10 * pwr * AtoRez );
+		volts = sqrtul( 10 * pwr * r ); //AtoRez
 
 		ClampAtoVolts();
 
@@ -306,7 +310,7 @@ __myevic__ void StopFire()
 	{
 		GPIO_SetMode( PD, GPIO_PIN_PIN1_Msk, GPIO_MODE_INPUT );
 	}
-	else if ( !ISCUBOID && !ISCUBO200 && !ISRX200S && !ISRX23 && !ISRX300 )
+	else if ( !ISCUBOID && !ISCUBO200 && !ISRX200S && !ISRX23 && !ISRX300 && !ISGEN3 )
 	{
 		GPIO_SetMode( PD, GPIO_PIN_PIN7_Msk, GPIO_MODE_INPUT );
 	}
@@ -418,7 +422,12 @@ __myevic__ void ReadAtoCurrent()
 	unsigned int adcAtoVolts;
 	unsigned int arez;
 	unsigned int current1, current2;
-	int s;
+	int c;
+
+        if ( ISGEN3 )
+            c = 11; //lsrs B
+        else
+            c = 12;
 
 	if ( gFlags.firing || gFlags.probing_ato )
 	{
@@ -456,7 +465,7 @@ __myevic__ void ReadAtoCurrent()
 		else
 		{
 			// Shunt current, in 10th of an Amp
-			current1 = ( ( 10 * 2560 * adcShunt1 ) >> 12 ) / AtoShuntRez;
+			current1 = ( ( 10 * 2560 * adcShunt1 ) >> c ) / AtoShuntRez;
 			current2 = 0;
 
 			AtoCurrent = current1;
@@ -471,7 +480,7 @@ __myevic__ void ReadAtoCurrent()
 			&& TargetVolts >= 100	// 1.00V
 		)
 		{
-			s = 2;
+			// s = 2;
 		}
 	//	Definitely useless.
 	//	else if ( ( current1 >= 255 || current2 >= 255 ) && !ISMODEBY(dfMode) )
@@ -497,16 +506,16 @@ __myevic__ void ReadAtoCurrent()
 		StopFire();
 		}
 
-		myprintf(	"\n"
-					" Short %d! u32ADValue_Res_temp(%d) u32ADValue_CurVol_temp(%d)"
-					" g_u16DetRes_I(%d.%d) u16Res(%d) g_u32Set_OutVol(%d).\n",
-					s,
-					adcShunt1,
-					adcAtoVolts,
-					AtoCurrent / 10,
-					AtoCurrent % 10,
-					arez,
-					TargetVolts	);
+		// myprintf(	"\n"
+		// 			" Short %d! u32ADValue_Res_temp(%d) u32ADValue_CurVol_temp(%d)"
+		// 			" g_u16DetRes_I(%d.%d) u16Res(%d) g_u32Set_OutVol(%d).\n",
+		// 			s,
+		// 			adcShunt1,
+		// 			adcAtoVolts,
+		// 			AtoCurrent / 10,
+		// 			AtoCurrent % 10,
+		// 			arez,
+		// 			TargetVolts	);
 	}
 }
 
@@ -609,7 +618,7 @@ __myevic__ void CheckMode()
 		if ( dfPower > 200 )
 		{
 			dfPower = 200;
-			dfVWVolts = GetAtoVWVolts( 200 );
+			dfVWVolts = GetAtoVWVolts( 200, AtoRez );
 		}
 
 		if ( !gFlags.new_rez_ni  )
@@ -707,6 +716,8 @@ __myevic__ void ReadAtomizer()
 		ADCShuntSum = ( ADCShuntSum1 + ADCShuntSum2 ) ? : 1;
 
 		AtoRezMilli = 13 * AtoShuntRez * ADCAtoSum / ( 3 * ( ADCShuntSum ) );
+
+		if ( ISGEN3 ) AtoRezMilli >>= 1;
 
 		if ( gFlags.firing )
 		{
@@ -845,7 +856,7 @@ __myevic__ void RegulateBuckBoost()
 	AtoVoltsADC = ADC_Read( 1 );
 	AtoVolts = ( 1109 * AtoVoltsADC ) >> 12;
 
-	if ( ISCUBO200|| ISRX200S || ISRX23 || ISRX300 )
+	if ( ISCUBO200 || ISRX200S || ISRX23 || ISRX300 || ISGEN3 )
 	{
 		RegulateDualBuck();
 		return;
@@ -1365,7 +1376,7 @@ __myevic__ void SetAtoLimits()
 		if ( pwr < AtoMinPower ) pwr = AtoMinPower;
 		if ( pwr > AtoMaxPower ) pwr = AtoMaxPower;
 
-		dfVWVolts = GetAtoVWVolts(pwr);
+		dfVWVolts = GetAtoVWVolts(pwr, AtoRez);
 
 		if ( dfMode == 6 )
 			dfPower = ClampPower( dfVWVolts, 1 );
@@ -1380,7 +1391,7 @@ __myevic__ void SetAtoLimits()
 __myevic__ void ProbeAtomizer()
 {
 	if (( ISVTCDUAL && ( BatteryStatus == 2 || !PA3 ) )
-	||  ( ( ISCUBOID || ISCUBO200 || ISRX200S || ISRX23 || ISRX300 ) && ( BatteryStatus == 2 || !PF0 ) ))
+	||  ( ( ISCUBOID || ISCUBO200 || ISRX200S || ISRX23 || ISRX300 || ISGEN3 ) && ( BatteryStatus == 2 || !PF0 ) ))
 	{
 		AtoStatus = 0;
 //		myprintf( "Can't Probe: BS=%d PF0=%d\n", BatteryStatus, PF0 );
@@ -2025,7 +2036,7 @@ __myevic__ void TweakTargetVoltsPID()
 
 	++AlgoCtl.counter;
 	//if (gFlags.warmup) AlgoCtl.ttemp=245; else AlgoCtl.ttemp = dfIsCelsius ? dfTemp : FarenheitToC( dfTemp );
-	
+
 	/*if (dfTemp != AlgoCtl.otemp) {
 		AlgoCtl.otemp=dfIsCelsius ? dfTemp : FarenheitToC( dfTemp );
 		AlgoCtl.integ = 0;
@@ -2038,9 +2049,9 @@ __myevic__ void TweakTargetVoltsPID()
 		return;
 
 	AlgoCtl.atemp = FarenheitToC( AtoTemp );
-	
-	
-	
+
+
+
 	// if watts < 185, no draw detected at hi temp, activated eco
 	if (gFlags.autopuff && !gFlags.warmup && ecolvl>0 && AlgoCtl.atemp > AlgoCtl.ecotemp && AlgoCtl.avgpwr < 170) {
 	AlgoCtl.ttemp=AlgoCtl.ecotemp;
@@ -2070,13 +2081,13 @@ __myevic__ void TweakTargetVoltsPID()
 
 	// hit the power breaks when battery sags on single cell mods
 	if (NumBatteries == 1 && RTBattVolts < 305 && pwr > 500) pwr = 500;
-	if (NumBatteries == 1 && RTBattVolts < 300 && pwr > 400) pwr = 400;	
-	if (NumBatteries == 1 && RTBattVolts < 290 && pwr > 300) pwr = 300;	
+	if (NumBatteries == 1 && RTBattVolts < 300 && pwr > 400) pwr = 400;
+	if (NumBatteries == 1 && RTBattVolts < 290 && pwr > 300) pwr = 300;
 
 	// running power average
 	AlgoCtl.avgpwr= (AlgoCtl.avgpwr*(AlgoCtl.navgpwr-1)+pwr)/AlgoCtl.navgpwr;
 
-	// if watts > trigpwrup at ecotemp, draw detected, switch to hi temp, reset I of pid	
+	// if watts > trigpwrup at ecotemp, draw detected, switch to hi temp, reset I of pid
 	if (gFlags.autopuff && !gFlags.warmup && ecolvl>0 && AlgoCtl.atemp <= AlgoCtl.ecotemp && AlgoCtl.avgpwr > AlgoCtl.trigpwrup) {
 	AlgoCtl.ttemp=AlgoCtl.otemp;
 	//AlgoCtl.error = AlgoCtl.ttemp - AlgoCtl.atemp;

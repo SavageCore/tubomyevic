@@ -24,6 +24,7 @@ this firmware fork is for a project that is not related directly with e-cig , el
   * Reuleaux RX2/3
   * Reuleaux RXmini
   * Reuleaux RX300
+  * Reuleaux RX GEN3
 * Others
   * Vaponaute La Petite Box
 

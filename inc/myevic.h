@@ -58,7 +58,8 @@ enum
 	BOX_RX200S,
 	BOX_RX23,
 	BOX_RX300,
-	BOX_RXMINI
+	BOX_RXMINI,
+	BOX_GEN3
 };
 
 #define ISVTCMINI		(BoxModel==BOX_VTCMINI)
@@ -78,6 +79,7 @@ enum
 #define ISRX23			(BoxModel==BOX_RX23)
 #define ISRX300			(BoxModel==BOX_RX300)
 #define ISRXMINI		(BoxModel==BOX_RXMINI)
+#define ISGEN3			(BoxModel==BOX_GEN3)
 
 
 //=========================================================================
